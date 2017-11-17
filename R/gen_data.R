@@ -11,6 +11,7 @@
 #' @param sigma1: Float, variance for outcomes in series 1
 #' @param sigma2: Float, variance for outcomes in series 2
 #'
+#'
 #' @return List: \cr
 #'    X1: Matrix, dataset for series 1 \cr
 #'    X2: Matrix, dataset for series 2 \cr
@@ -79,16 +80,3 @@ gen_data = function(N,T1,T2,pi1,pi2,beta1,beta2,sigma1,sigma2) {
 
   return(list(X1=X1,X2=X2,Y1=Y1,Y2=Y2))
 }
-
-data = gen_data(N=1000,
-         T1=5,
-         T2=6,
-         pi1=c(0.5,0.2,0.3),
-         pi2=matrix(c(0.3,0.3,0.4,
-                      0.2,0.5,0.3,
-                      0.7,0.1,0.1),
-                    nrow=3,ncol=3,byrow=TRUE),
-         beta1=list(c(1,1,6,-3),c(3,2,2,-1),c(2,1,9,-3)),
-         beta2=list(c(4,1,5,-2),c(6,2,5,-4),c(5,1,15,-2)),
-         sigma1=2,
-         sigma2=4)

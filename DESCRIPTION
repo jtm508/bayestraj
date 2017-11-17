@@ -8,3 +8,5 @@ Description: More about what it does (maybe more than one line)
 License: MIT
 LazyData: TRUE
 RoxygenNote: 5.0.1
+Imports:
+  MCMCpack (>= 1.3.0)

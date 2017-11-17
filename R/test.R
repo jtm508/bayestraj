@@ -1,0 +1,20 @@
+data = gen_data(N=1000,
+                T1=5,
+                T2=6,
+                pi1=c(0.5,0.2,0.3),
+                pi2=matrix(c(0.3,0.3,0.4,
+                             0.2,0.5,0.3,
+                             0.7,0.1,0.1),
+                           nrow=3,ncol=3,byrow=TRUE),
+                beta1=list(c(1,1,6,-3),c(3,2,2,-1),c(2,1,9,-3)),
+                beta2=list(c(4,1,5,-2),c(6,2,5,-4),c(5,1,15,-2)),
+                sigma1=2,
+                sigma2=4)
+
+dualtraj(X1=data$X1,
+         X2=data$X2,
+         Y1=data$Y1,
+         Y2=data$Y2,
+         K1=3,
+         K2=3,
+         iterations=100)

@@ -1,0 +1,10 @@
+Package: BayesTraj
+Type: Package
+Title: What the Package Does (Title Case)
+Version: 0.1.0
+Author: Justin Max <jtm508@gmail.com>
+Maintainer: Justin Max <jtm508@gmail.com>
+Description: More about what it does (maybe more than one line)
+License: MIT
+LazyData: TRUE
+RoxygenNote: 5.0.1

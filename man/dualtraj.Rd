@@ -4,7 +4,8 @@
 \alias{dualtraj}
 \title{dualtraj}
 \usage{
-dualtraj(X1, X2, Y1, Y2, K1, K2, iterations)
+dualtraj(X1, X2, Y1, Y2, g1, g2, K1, K2, iterations, thin = 1,
+  dispIter = 10)
 }
 \arguments{
 \item{X1:}{Matrix, design matrix for series 1. 1st column should be the id.}
@@ -20,8 +21,11 @@ dualtraj(X1, X2, Y1, Y2, K1, K2, iterations)
 \item{K2:}{Integer, number of latent classes in series 2}
 
 \item{iterations:}{Integer, number of MCMC iterations}
+
+\item{thin:}{Integer, store every 'thin' iteration}
+
+\item{dispIter:}{Integer, frequency of printing the iteration number}
 }
 \description{
 Estimate the dual trajectory model using a Gibbs Sampler
 }
-

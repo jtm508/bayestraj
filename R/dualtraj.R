@@ -81,7 +81,8 @@ for (q in 1:iterations) {
     print(q)
   
   #draw groups
-  #todo
+  g1 = drawgroup(X1,Y1,N,id1,g2,pi1,pi2,beta1,sigma1)
+  g2 = drawgroup2(X1,Y1,N,id2,g1,pi1,pi2,beta1,sigma1)
   
   #reindex according to new groups
   index1 = g1[id1]

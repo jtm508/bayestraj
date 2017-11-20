@@ -2,6 +2,8 @@
 
 export(drawSigma)
 export(drawbeta)
+export(drawgroup)
+export(drawgroup2)
 export(drawmu)
 export(drawpi)
 export(drawsigma)

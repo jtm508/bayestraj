@@ -12,3 +12,4 @@ logsumexp(X)
 \description{
 Compute log(sum(exp(X))) while avoiding numerical underflow
 }
+

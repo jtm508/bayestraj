@@ -65,6 +65,8 @@ mu1 = rep(0,d1)
 mu2 = rep(0,d2)
 
 #initialize storage
+g1Store = matrix(nrow=iterations/thin, ncol=N)
+g2Store = matrix(nrow=iterations/thin, ncol=N)
 pi1Store = matrix(nrow=iterations/thin, ncol=K1)
 pi2Store = matrix(nrow=iterations/thin, ncol=K1*K2)
 beta1Store = list()
@@ -81,8 +83,8 @@ for (q in 1:iterations) {
     print(q)
   
   #draw groups
-  g1 = drawgroup(X1,Y1,N,id1,g2,pi1,pi2,beta1,sigma1)
-  g2 = drawgroup2(X1,Y1,N,id2,g1,pi1,pi2,beta1,sigma1)
+  g1 = drawgroup(X1,Y1,N,id1,g2,pi1,pi2,beta1,sigma1,K1)
+  g2 = drawgroup2(X2,Y2,N,id2,g1,pi1,pi2,beta2,sigma2,K2)
   
   #reindex according to new groups
   index1 = g1[id1]
@@ -121,12 +123,16 @@ for (q in 1:iterations) {
       beta1Store[[j]][store,] = beta1[j,]
     for (j in 1:K2)
       beta2Store[[j]][store,] = beta2[j,]
+    g1Store[store,] = g1
+    g2Store[store,] = g2
     sigma1Store[store] = sigma1
     sigma2Store[store] = sigma2
   }
 }
 return(list(beta1  = beta1Store,
             beta2  = beta2Store,
+            g1     = g1Store,
+            g2     = g2Store,
             pi1    = pi1Store,
             pi2    = pi2Store,
             sigma1 = sigma1Store,

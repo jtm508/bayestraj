@@ -24,3 +24,4 @@ drawsigma(X, Y, beta, index, nu, sigma0, N)
 \description{
 Draw sigma from posterior distribution
 }
+

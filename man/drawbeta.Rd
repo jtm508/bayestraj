@@ -20,3 +20,4 @@ drawbeta(X, Y, sigma, mu, Sigma)
 \description{
 Draw beta from posterior distribution
 }
+

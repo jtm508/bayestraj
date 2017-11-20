@@ -30,3 +30,4 @@ drawgroup2(X, Y, N, id, g1, pi1, pi2, beta, sigma, K)
 \description{
 Draw beta from posterior distribution
 }
+

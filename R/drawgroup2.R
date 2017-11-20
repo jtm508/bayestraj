@@ -23,6 +23,7 @@ drawgroup2 = function(X,Y,N,id,g1,pi1,pi2,beta,sigma,K) {
   #log-likelihood of each observation under each group
   ll = dnorm(Y, mean = X %*% t(beta), sd = sqrt(sigma), log = TRUE)
   
+  g = rep(NA,N)
   for (i in 1:N) {
     denom = colSums(ll[id==i,]) + logpi2[g1[i],] + logpi1[g1[i]]
     numer = logsumexp(denom)

@@ -4,8 +4,7 @@
 \alias{dualtraj}
 \title{dualtraj}
 \usage{
-dualtraj(X1, X2, Y1, Y2, g1, g2, K1, K2, iterations, thin = 1,
-  dispIter = 10)
+dualtraj(X1, X2, Y1, Y2, K1, K2, iterations, thin = 1, dispIter = 10)
 }
 \arguments{
 \item{X1:}{Matrix, design matrix for series 1. 1st column should be the id.}

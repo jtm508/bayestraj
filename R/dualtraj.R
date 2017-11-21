@@ -17,7 +17,7 @@
 #'
 #' @export
 
-dualtraj = function(X1,X2,Y1,Y2,g1,g2,K1,K2,iterations,thin=1,dispIter=10) {
+dualtraj = function(X1,X2,Y1,Y2,K1,K2,iterations,thin=1,dispIter=10) {
 
 #extract ids from design matrices
 id1 = X1[,1]
@@ -51,7 +51,7 @@ Lambda1 = 10000*diag(d1)
 Lambda2 = 10000*diag(d2)
 
 #initialize parameters
-pi1 = rdirichlet(1,alpha1)
+pi1 = as.vector(rdirichlet(1,alpha1))
 pi2 = matrix(nrow=K1,ncol=K2)
 for (j in 1:K1)
   pi2[j,] = rdirichlet(1,alpha2)
@@ -115,7 +115,7 @@ for (q in 1:iterations) {
   Sigma1 = drawSigma(beta1, mu1, nu1, V1, K1)
   Sigma2 = drawSigma(beta2, mu2, nu2, V2, K2)
   
-  if (q %% thin ==0) {
+  if (q %% thin == 0) {
     store = q/thin
     pi1Store[store,] = pi1
     pi2Store[store,] = as.vector(t(pi2))

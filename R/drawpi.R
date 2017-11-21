@@ -11,6 +11,6 @@
 #' @export
 
 drawpi = function(g, alpha, K) {
-  pi = rdirichlet(1, alpha + table(factor(g, levels = 1:K)))
+  pi = as.vector(rdirichlet(1, alpha + table(factor(g, levels = 1:K))))
   return(pi)
 }

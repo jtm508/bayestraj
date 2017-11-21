@@ -14,21 +14,24 @@
 #' @param K: Number of groups in series 1
 #'
 #' @export
-#' 
 
-drawgroup2 = function(X,Y,N,id,g1,pi1,pi2,beta,sigma,K) {
+drawgroup2 = function(X,Y,N,id,g2,pi1,pi2,beta,sigma,K) {
   logpi1 = log(pi1)
   logpi2 = log(pi2)
   
   #log-likelihood of each observation under each group
   ll = dnorm(Y, mean = X %*% t(beta), sd = sqrt(sigma), log = TRUE)
+  llSum = llSum = rowsum(ll,group=id)
   
-  g = rep(NA,N)
-  for (i in 1:N) {
-    denom = colSums(ll[id==i,]) + logpi2[g1[i],] + logpi1[g1[i]]
-    numer = logsumexp(denom)
-    prob = exp(denom - numer)
-    g[i] = sample(c(1:K), 1, prob=prob)
-  }
+  #log-likelihood of each observation under each group
+  numer = llSum + logpi2[g1,] + logpi1[g1]
+  denom = apply(numer, 1, logsumexp)
+  prob = exp(numer - denom)
+  
+  #get probabilities 
+  u = runif(N)
+  cumProb = prob %*% upper.tri(diag(ncol(prob)), diag = TRUE)
+  g = rowSums(u > cumProb) + 1
+  
   return(g)
 }

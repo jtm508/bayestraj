@@ -4,7 +4,7 @@
 \alias{drawgroup2}
 \title{drawbeta}
 \usage{
-drawgroup2(X, Y, N, id, g1, pi1, pi2, beta, sigma, K)
+drawgroup2(X, Y, N, id, g2, pi1, pi2, beta, sigma, K)
 }
 \arguments{
 \item{X:}{Matrix, design matrix}

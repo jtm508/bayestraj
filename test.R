@@ -1,3 +1,5 @@
+set.seed(508)
+
 N=1000
 T1=5
 T2=6
@@ -37,10 +39,19 @@ model = dualtraj(X1=X1,
                  X2=X2,
                  Y1=Y1,
                  Y2=Y2,
-                 g1=g1,
-                 g2=g2,
                  K1=3,
                  K2=3,
                  iterations=10000,
                  thin=10,
                  dispIter=100)
+
+print(colMeans(model$beta1[[1]][-5000,]))
+print(colMeans(model$beta1[[2]][-5000,]))
+print(colMeans(model$beta1[[3]][-5000,]))
+print(colMeans(model$beta2[[1]][-5000,]))
+print(colMeans(model$beta2[[2]][-5000,]))
+print(colMeans(model$beta2[[3]][-5000,]))
+print(colMeans(model$pi1[-5000,]))
+print(colMeans(model$pi2[-5000,]))
+print(mean(model$sigma1[-5000]))
+print(mean(model$sigma2[-5000]))

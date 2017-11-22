@@ -25,7 +25,9 @@ drawgroup2 = function(X,Y,N,id,g2,pi1,pi2,beta,sigma,K) {
   
   #log-likelihood of each observation under each group
   numer = llSum + logpi2[g1,] + logpi1[g1]
-  denom = apply(numer, 1, logsumexp)
+  #denom = apply(numer, 1, logsumexp)
+  maxNumer = apply(numer,1,max)
+  denom = maxNumer + log(rowSums(exp(numer-maxNumer))) #logsumexp trick
   prob = exp(numer - denom)
   
   #get probabilities 

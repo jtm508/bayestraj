@@ -23,7 +23,12 @@ dualtraj = function(X1,X2,Y1,Y2,K1,K2,iterations,thin=1,dispIter=10) {
 id1 = X1[,1]
 id2 = X2[,1]
 
-#number of tandems
+#relabel id's to begin at 1
+uniqueIDs = sort(unique(c(id1,id2)))
+id1 = match(id1,uniqueIDs)
+id2 = match(id2,uniqueIDs)
+
+#number of pairs
 N = length(unique(id1))
 
 #length of data
@@ -51,6 +56,8 @@ Lambda1 = 10000*diag(d1)
 Lambda2 = 10000*diag(d2)
 
 #initialize parameters
+g1 = sample(c(1:K1),N,replace=TRUE)
+g2 = sample(c(1:K2),N,replace=TRUE)
 pi1 = as.vector(rdirichlet(1,alpha1))
 pi2 = matrix(nrow=K1,ncol=K2)
 for (j in 1:K1)

@@ -2,7 +2,7 @@
 % Please edit documentation in R/drawgroup.R
 \name{drawgroup}
 \alias{drawgroup}
-\title{drawbeta}
+\title{drawgroup}
 \usage{
 drawgroup(X, Y, N, id, g2, pi1, pi2, beta, sigma, K)
 }
@@ -28,6 +28,5 @@ drawgroup(X, Y, N, id, g2, pi1, pi2, beta, sigma, K)
 \item{K:}{Number of groups in series 1}
 }
 \description{
-Draw beta from posterior distribution
+Draw first series' groups from posterior distribution
 }
-

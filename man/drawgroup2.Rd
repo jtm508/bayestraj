@@ -2,9 +2,9 @@
 % Please edit documentation in R/drawgroup2.R
 \name{drawgroup2}
 \alias{drawgroup2}
-\title{drawbeta}
+\title{drawgroup2}
 \usage{
-drawgroup2(X, Y, N, id, g2, pi1, pi2, beta, sigma, K)
+drawgroup2(X, Y, N, id, g1, pi1, pi2, beta, sigma, K)
 }
 \arguments{
 \item{X:}{Matrix, design matrix}
@@ -28,6 +28,5 @@ drawgroup2(X, Y, N, id, g2, pi1, pi2, beta, sigma, K)
 \item{K:}{Number of groups in series 1}
 }
 \description{
-Draw beta from posterior distribution
+Draw second series' groups from posterior distribution
 }
-

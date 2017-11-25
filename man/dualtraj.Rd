@@ -28,4 +28,3 @@ dualtraj(X1, X2, Y1, Y2, K1, K2, iterations, thin = 1, dispIter = 10)
 \description{
 Estimate the dual trajectory model using a Gibbs Sampler
 }
-

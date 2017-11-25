@@ -18,4 +18,3 @@ drawmu(beta, Sigma, Lambda, K)
 \description{
 Draw mu from posterior distribution
 }
-

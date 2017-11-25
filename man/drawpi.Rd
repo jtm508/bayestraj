@@ -16,4 +16,3 @@ drawpi(g, alpha, K)
 \description{
 Draw pi from posterior distribution
 }
-

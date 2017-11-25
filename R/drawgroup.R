@@ -1,6 +1,6 @@
-#' drawbeta
+#' drawgroup
 #'
-#' Draw beta from posterior distribution
+#' Draw first series' groups from posterior distribution
 #'
 #' @param X: Matrix, design matrix
 #' @param Y: Vector, outcomes

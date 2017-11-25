@@ -1,6 +1,6 @@
-#' drawbeta
+#' drawgroup2
 #'
-#' Draw beta from posterior distribution
+#' Draw second series' groups from posterior distribution
 #'
 #' @param X: Matrix, design matrix
 #' @param Y: Vector, outcomes
@@ -15,7 +15,7 @@
 #'
 #' @export
 
-drawgroup2 = function(X,Y,N,id,g2,pi1,pi2,beta,sigma,K) {
+drawgroup2 = function(X,Y,N,id,g1,pi1,pi2,beta,sigma,K) {
   logpi1 = log(pi1)
   logpi2 = log(pi2)
   

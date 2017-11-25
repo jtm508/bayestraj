@@ -35,4 +35,3 @@ List: \cr
 \description{
 Generate data for a dual trajectory model
 }
-

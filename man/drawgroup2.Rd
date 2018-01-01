@@ -4,12 +4,12 @@
 \alias{drawgroup2}
 \title{drawgroup2}
 \usage{
-drawgroup2(X, Y, N, id, g1, pi1, pi2, beta, sigma, K)
+drawgroup2(X, y, N, id, g1, pi1, pi1_2, beta, sigma, K)
 }
 \arguments{
 \item{X:}{Matrix, design matrix}
 
-\item{Y:}{Vector, outcomes}
+\item{y:}{Vector, outcomes}
 
 \item{N:}{Integer, number of tandems}
 
@@ -19,11 +19,11 @@ drawgroup2(X, Y, N, id, g1, pi1, pi2, beta, sigma, K)
 
 \item{pi1:}{Vector, group probabilities for series 1}
 
-\item{pi2:}{Vector, transition probabilities for series 2}
+\item{pi1_2:}{Vector, transition probabilities for series 2}
 
 \item{beta:}{Matrix, likelihood coefficients for series 1}
 
-\item{sigma:}{Float, likelihood variance}
+\item{sigma:}{Float or vector, likelihood variance}
 
 \item{K:}{Number of groups in series 1}
 }

@@ -4,14 +4,14 @@
 \alias{drawgroup}
 \title{drawgroup}
 \usage{
-drawgroup(X, Y, N, id, g2, pi1, pi2, beta, sigma, K)
+drawgroup(X, y, N, id, g2, pi1, pi1_2, beta, sigma, K)
 }
 \arguments{
 \item{X:}{Matrix, design matrix}
 
-\item{Y:}{Vector, outcomes}
+\item{y:}{Vector, outcomes}
 
-\item{N:}{Integer, number of tandems}
+\item{N:}{Integer, number of pairs}
 
 \item{id:}{Vector, tandem for each row of X and Y}
 
@@ -19,7 +19,7 @@ drawgroup(X, Y, N, id, g2, pi1, pi2, beta, sigma, K)
 
 \item{pi1:}{Vector, group probabilities for series 1}
 
-\item{pi2:}{Vector, transition probabilities for series 2}
+\item{pi1_2:}{Vector, transition probabilities for series 2}
 
 \item{beta:}{Matrix, likelihood coefficients for series 1}
 

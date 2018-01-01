@@ -8,20 +8,16 @@
 #' @param y2: Vector, outcomes for series 2
 #' @param K1: Integer, number of latent classes in series 1
 #' @param K2: Integer, number of latent classes in series 2
-#' @param z1: Matrix, K1 x dim(X1)[2] indicator matrix indicating which variables to inlcude in each group.
-#' @param z2: Matrix, K2 x dim(X2)[2] indicator matrix indicating which variables to inlcude in each group.
 #' @param iterations: Integer, number of MCMC iterations
 #' @param thin: Integer, store every 'thin' iteration
 #' @param dispIter: Integer, frequency of printing the iteration number
-#' @param ll: Boolean, Set to TRUE to display the maximum log-likelihood over all the draws.
 #'
 #' @importFrom MCMCpack rdirichlet riwish rinvgamma
 #' @importFrom mvtnorm rmvnorm
 #'
 #' @export
 
-dualtraj = function(X1,X2,y1,y2,K1,K2,z1,z2,iterations,thin=1,dispIter=10,ll=FALSE) {
-
+dualtrajMS = function(X1,X2,y1,y2,K1,K2,iterations,thin=1,dispIter=10) {
 #extract ids from design matrices
 id1 = X1[,1]
 id2 = X2[,1]
@@ -49,8 +45,6 @@ d2 = dim(X2)[2]
 #hyperparameters
 alpha1 = rep(1,K1)
 alpha2 = rep(1,K2)
-nu0 = 0.001
-sigma0 = 1
 
 #initialize parameters
 c1 = sample(c(1:K1),N,replace=TRUE)
@@ -59,22 +53,14 @@ pi1 = as.vector(rdirichlet(1,alpha1))
 pi1_2 = matrix(nrow=K1,ncol=K2)
 for (j in 1:K1)
   pi1_2[j,] = rdirichlet(1,alpha2)
-sigma1 = 1
-sigma2 = 1
-Sigma1 = list()
-for (j in 1:K1)
-  Sigma1[[j]] = 100*diag(sum(z1[j,]))
-Sigma2 = list()
-for (j in 1:K2)
-  Sigma2[[j]] = 100*diag(sum(z2[j,]))
+sigma1 = rep(1,K1)
+sigma2 = rep(1,K2)
 beta1=matrix(0,nrow=K1,ncol=d1,byrow=TRUE)
 beta2=matrix(0,nrow=K2,ncol=d2,byrow=TRUE)
-mu1 = list()
-for (j in 1:K1)
-  mu1[[j]] = rep(0,sum(z1[j,]))
-mu2 = list()
-for (j in 1:K2)
-  mu2[[j]] = rep(0,sum(z2[j,]))
+z1 = matrix(1,nrow=K1,ncol=d1)
+z2 = matrix(1,nrow=K2,ncol=d2)
+marg.lik1.c = rep(0,K1)
+marg.lik2.c = rep(0,K2)
 
 #initialize storage
 c1Store = matrix(nrow=iterations/thin, ncol=N)
@@ -82,15 +68,19 @@ c2Store = matrix(nrow=iterations/thin, ncol=N)
 pi1Store = matrix(nrow=iterations/thin, ncol=K1)
 pi1_2Store = array(NA,dim=c(iterations/thin,K1,K2))
 beta1Store = list()
-for (j in 1:K1)
-  beta1Store[[j]] = matrix(nrow=iterations/thin, ncol=sum(z1[j,]))
+z1Store = list()
+for (j in 1:K1) {
+  beta1Store[[j]] = matrix(nrow=iterations/thin, ncol=d1)
+  z1Store[[j]] = matrix(nrow=iterations/thin, ncol=d1)
+}
 beta2Store = list()
-for (j in 1:K2)
-  beta2Store[[j]] = matrix(nrow=iterations/thin, ncol=sum(z2[j,]))
-sigma1Store = rep(NA,iterations/thin)
-sigma2Store = rep(NA,iterations/thin)
-
-maxll = -Inf
+z2Store = list()
+for (j in 1:K2) {
+  beta2Store[[j]] = matrix(nrow=iterations/thin, ncol=d2)
+  z2Store[[j]] = matrix(nrow=iterations/thin, ncol=d1)
+}
+sigma1Store = matrix(nrow=iterations/thin, ncol=K1)
+sigma2Store = matrix(nrow=iterations/thin, ncol=K2)
 
 for (q in 1:iterations) {
   if (q %% dispIter == 0) {
@@ -110,39 +100,75 @@ for (q in 1:iterations) {
   for (j in 1:K1)
     pi1_2[j,] = drawpi(c2[c1==j], alpha2, K2)
   
-  #draw beta
+  #draw group parameters
   for (j in 1:K1) {
+    #recalculate marginal likelihood for new group memberships
+    marg.lik1.c[j] = marg_lik(y1[index1==j], X1[index1==j,z1[j,]==1,drop=FALSE])
+    #sample z
+    for (b in resamp(3:d1)) {
+      zlist = drawz(z1,j,b,y1,X1,index1,marg.lik1.c[j])
+      z1[j,b] = zlist[[1]]
+      marg.lik1.c[j] = zlist[[2]]
+    }
+    #some calculations
+    X.temp = X1[index1==j,z1[j,]==1,drop=FALSE]
+    y.temp = y1[index1==j]
+    n = length(y.temp)
+    g = n
+    A = crossprod(X.temp)
+    beta.ols = as.vector(solve(A,crossprod(X.temp,y.temp)))
+    SSR = sum((y.temp - X.temp %*% beta.ols)^2)
+    
+    #sample sigma^2
+    sigma1[j] = rinvgamma(1,n/2,SSR/2 + crossprod(beta.ols,A) %*% beta.ols / (2 * (g + 1)))
+    
+    #sample beta
     beta1[j,] = rep(0,d1)
-    beta1[j,z1[j,]==1] = drawbeta(X1[index1==j,z1[j,]==1], y1[index1==j], sigma1, mu1[[j]], Sigma1[[j]])
+    beta1[j,z1[j,]==1] = as.vector(rmvnorm(1, g / (g + 1) * beta.ols, g / (g + 1)  * sigma1[j] * solve(A)))
   }
   
   for (j in 1:K2) {
+    #recalculate marginal likelihood for new group memberships
+    marg.lik2.c[j] = marg_lik(y2[index2==j], X2[index2==j,z2[j,]==1,drop=FALSE])
+    #sample z
+    for (b in resamp(3:d2)) {
+      zlist = drawz(z2,j,b,y2,X2,index2,marg.lik2.c[j])
+      z2[j,b] = zlist[[1]]
+      marg.lik2.c[j] = zlist[[2]]
+    }
+    #some calculations
+    X.temp = X2[index2==j,z2[j,]==1,drop=FALSE]
+    y.temp = y2[index2==j]
+    n = length(y.temp)
+    g = n
+    A = crossprod(X.temp)
+    beta.ols = as.vector(solve(A, crossprod(X.temp, y.temp)))
+    SSR = sum((y.temp - X.temp %*% beta.ols)^2)
+    
+    #sample sigma^2
+    sigma2[j] = rinvgamma(1,n/2,SSR/2 + crossprod(beta.ols,A) %*% beta.ols / (2 * (g + 1)))
+    
+    #sample beta
     beta2[j,] = rep(0,d2)
-    beta2[j,z2[j,]==1] = drawbeta(X2[index2==j,z2[j,]==1], y2[index2==j], sigma2, mu2[[j]], Sigma2[[j]])
+    beta2[j,z2[j,]==1] = as.vector(rmvnorm(1, g / (g + 1) * beta.ols, g / (g + 1)  * sigma2[j] * solve(A)))
   }
-  
-  #draw variances
-  sigma1 = drawsigma(X1, y1, beta1, index1, nu0, sigma0, N1)
-  sigma2 = drawsigma(X2, y2, beta2, index2, nu0, sigma0, N2)
-  
-  if (ll == TRUE) {
-    ll.c = log_lik_dual(X1,X2,y1,y2,pi1,pi1_2,beta1,beta2,sigma1,sigma2,id1,id2)
-    maxll = max(maxll,ll.c)
-  }
-  
   
   if (q %% thin == 0) {
     store = q/thin
     pi1Store[store,] = pi1
     pi1_2Store[store,,] = pi1_2
-    for (j in 1:K1)
-      beta1Store[[j]][store,] = beta1[j,z1[j,]==1]
-    for (j in 1:K2)
-      beta2Store[[j]][store,] = beta2[j,z2[j,]==1]
+    for (j in 1:K1) {
+      beta1Store[[j]][store,] = beta1[j,]
+      z1Store[[j]][store,] = z1[j,]
+    }
+    for (j in 1:K2) {
+      beta2Store[[j]][store,] = beta2[j,]
+      z2Store[[j]][store,] = z2[j,]
+    }
     c1Store[store,] = c1
     c2Store[store,] = c2
-    sigma1Store[store] = sigma1
-    sigma2Store[store] = sigma2
+    sigma1Store[store,] = sigma1
+    sigma2Store[store,] = sigma2
   }
 }
 
@@ -170,11 +196,6 @@ for (i in 1:K1) {
   }
 }
 
-if (ll == TRUE) {
-  print(maxll)
-}
-
-#return draws
 return(list(beta1  = beta1Store,
             beta2  = beta2Store,
             c1     = c1Store,
@@ -185,5 +206,16 @@ return(list(beta1  = beta1Store,
             pi1_2  = pi1_2Store,
             pi2_1  = pi2_1,
             sigma1 = sigma1Store,
-            sigma2 = sigma2Store))
+            sigma2 = sigma2Store,
+            z1     = z1Store,
+            z2     = z2Store))
+
+}
+
+#fuction to ensure proper sampling of z
+resamp = function(x) {
+  if(length(x)==1) 
+    x 
+  else 
+    sample(x)
 }

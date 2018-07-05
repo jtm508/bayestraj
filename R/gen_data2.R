@@ -10,6 +10,7 @@
 #' @param beta2: Matrix, coefficients for each group in series 2
 #' @param sigma1: Float, variance for outcomes in series 1
 #' @param sigma2: Float, variance for outcomes in series 2
+#' @param scale: Boolean, TRUE to scale design matrix
 #'
 #'
 #' @return List: \cr
@@ -19,7 +20,7 @@
 #'    Y2: Vector, outcomes for series 2 \cr
 #' @export
 
-gen_data2 = function(N,T1,T2,pi1,pi2,beta1,beta2,sigma1,sigma2) {
+gen_data2 = function(N,T1,T2,pi1,pi2,beta1,beta2,sigma1,sigma2,scale=FALSE) {
   if(length(pi1) != dim(pi2)[1])
     stop("Incompatible dimensions for pi1 and pi2")
   
@@ -55,6 +56,11 @@ gen_data2 = function(N,T1,T2,pi1,pi2,beta1,beta2,sigma1,sigma2) {
              matrix(runif(N*T2*ncov2)*10,N*T2,ncov2),
              time2,
              time2^2,deparse.level=FALSE)
+  
+  if (scale == TRUE) {
+    X1[,-1] = scale(X1[,-1])
+    X2[,-1] = scale(X2[,-1])
+  }
   
   #generate group memberships
   K1 = dim(beta1)[1]

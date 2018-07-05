@@ -5,7 +5,7 @@
 \title{BIC_dual}
 \usage{
 BIC_dual(X1, X2, y1, y2, pi1, pi1_2, beta1, beta2, sigma1, sigma2, id1, id2, z1,
-  z2)
+  z2, constrain = FALSE)
 }
 \arguments{
 \item{X1:}{Matrix, design matrix group 1}

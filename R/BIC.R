@@ -41,10 +41,13 @@ BIC = function(X,y,pi,beta,sigma,id,z) {
 #'
 #' @export
 #' 
-BIC_dual = function(X1,X2,y1,y2,pi1,pi1_2,beta1,beta2,sigma1,sigma2,id1,id2,z1,z2) {
+BIC_dual = function(X1,X2,y1,y2,pi1,pi1_2,beta1,beta2,sigma1,sigma2,id1,id2,z1,z2,constrain=FALSE) {
   ll = log_lik_dual(X1,X2,y1,y2,pi1,pi1_2,beta1,beta2,sigma1,sigma2,id1,id2)
   n = length(y1) + length(y2)
-  k = sum(z1) + sum(z2)+ length(pi1_2)-1 + length(sigma1) + length(sigma2) 
+  k = sum(z1) + sum(z2)+ length(pi1_2)-1 + length(sigma1) + length(sigma2)
+  if (constrain == TRUE)
+    #these are not sepearate parameters in the constrained model
+    k = k - sum(z2) - length(sigma2)
   BIC = ll - 0.5*k*log(n)
   return(BIC)
 }

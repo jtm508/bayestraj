@@ -4,28 +4,24 @@
 \alias{drawgroup}
 \title{drawgroup}
 \usage{
-drawgroup(X, y, N, id, g2, pi1, pi1_2, beta, sigma, K)
+drawgroup(X, y, N, id, pi, beta, sigma, K)
 }
 \arguments{
 \item{X:}{Matrix, design matrix}
 
 \item{y:}{Vector, outcomes}
 
-\item{N:}{Integer, number of pairs}
+\item{N:}{Integer, number of units}
 
 \item{id:}{Vector, tandem for each row of X and Y}
 
-\item{g2:}{Vector, group membership for series 2}
+\item{pi:}{Vector, group probabilities}
 
-\item{pi1:}{Vector, group probabilities for series 1}
-
-\item{pi1_2:}{Vector, transition probabilities for series 2}
-
-\item{beta:}{Matrix, likelihood coefficients for series 1}
+\item{beta:}{Matrix, likelihood coefficients for}
 
 \item{sigma:}{Float, likelihood variance}
 
-\item{K:}{Number of groups in series 1}
+\item{K:}{Number of groups}
 }
 \description{
 Draw first series' groups from posterior distribution

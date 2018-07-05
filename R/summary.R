@@ -132,6 +132,113 @@ summary_dual = function(model,X1,X2,y1,y2,z1,z2,burn) {
               BIC = BIC))
 }
 
+#' summary_dual_constrained
+#'
+#' Summarize output of dual trajectory model
+#'
+#' @param model: List, output from dualtraj or dualtrajMS 
+#' @param X1: Matrix, design matrix for series 1. 1st column should be the id.
+#' @param X2: Matrix, design matrix for series 2. 1st column should be the id.
+#' @param y1: Vector, outcomes for series 1
+#' @param y2: Vector, outcomes for series 2
+#' @param z: Matrix, K x dim(X1)[2] indicator matrix indicating which variables to inlcude
+#' @param burn: float, fraction of draws to keep for post burn-in period.
+#'
+#' @export
+
+summary_dual_constrained = function(model,X1,X2,y1,y2,z,burn) {
+  n = dim(model$c1)[1]
+  K = length(model$beta)
+  
+  df = data.frame(A= numeric(0), B= numeric(0), C= numeric(0), D= numeric(0),E= numeric(0))
+  #group 1
+  beta.e = matrix(0,nrow=K,ncol=max(do.call(rbind,lapply(model$beta,dim))[,2]))
+  for (k in 1:K) {
+    A = cbind(colMeans(tail(model$beta[[k]],n*burn)),
+              apply(tail(model$beta[[k]],n*burn), 2, sd),
+              t(apply(tail(model$beta[[k]],n*burn),2,quantile,probs=c(0.025,0.5,0.975))))
+    beta.e[k,z[k,]==1] = A[,1]
+    rownames(A) = sprintf(paste("beta_",k,"[%d]",sep=''),seq(1:dim(model$beta[[k]])[2]))
+    df = rbind(df,A)
+  }
+  
+  A = as.data.frame(t(c(mean(tail(sqrt(model$sigma),n*burn)),
+                        sd(tail(sqrt(model$sigma),n*burn)),
+                        quantile(tail(sqrt(model$sigma),n*burn),probs=c(0.025,0.5,0.975)))))
+  sigma.e = as.numeric(A[1])^2
+  rownames(A) = "sigma"
+  df = rbind(df,A)
+  
+  A = cbind(colMeans(tail(100*model$pi1,n*burn)),
+            apply(tail(100*model$pi1,n*burn),2,sd),
+            t(apply(tail(100*model$pi1,n*burn),2,quantile,probs=c(0.025,0.5,0.975))))
+  pi1.e = A[,1]/100
+  rownames(A) = sprintf("pi1[%d]",seq(1:K))
+  df = rbind(df,A)
+  
+  #transitions
+  A = cbind(as.vector(t(apply(100*model$pi1_2[(n*(1-burn)+1):n,,], c(2,3), mean))),
+            as.vector(t(apply(100*model$pi1_2[(n*(1-burn)+1):n,,], c(2,3), sd))),
+            as.vector(t(apply(100*model$pi1_2[(n*(1-burn)+1):n,,], c(2,3), quantile,probs=0.025))),
+            as.vector(t(apply(100*model$pi1_2[(n*(1-burn)+1):n,,], c(2,3), quantile,probs=0.5))),
+            as.vector(t(apply(100*model$pi1_2[(n*(1-burn)+1):n,,], c(2,3), quantile,probs=0.975))))
+  pi1_2.e = matrix(A[,1],nrow=K,ncol=K,byrow=TRUE)/100
+  colnames(A) = colnames(df)
+  rn = c()
+  for (k1 in 1:K) {
+    for (k2 in 1:K) {
+      rn = c(rn,paste("1->2,",k1,"->",k2,sep=''))
+    }
+  }
+  rownames(A) = rn
+  df = rbind(df,A)
+  
+  #transitions
+  A = cbind(as.vector(apply(100*model$pi2_1[(n*(1-burn)+1):n,,], c(2,3), mean)),
+            as.vector(apply(100*model$pi2_1[(n*(1-burn)+1):n,,], c(2,3), sd)),
+            as.vector(apply(100*model$pi2_1[(n*(1-burn)+1):n,,], c(2,3), quantile,probs=0.025)),
+            as.vector(apply(100*model$pi2_1[(n*(1-burn)+1):n,,], c(2,3), quantile,probs=0.5)),
+            as.vector(apply(100*model$pi2_1[(n*(1-burn)+1):n,,], c(2,3), quantile,probs=0.975)))
+  colnames(A) = colnames(df)
+  rn = c()
+  for (k2 in 1:K) {
+    for (k1 in 1:K) {
+      rn = c(rn,paste("2->1,",k2,"->",k1,sep=''))
+    }
+  }
+  rownames(A) = rn
+  df = rbind(df,A)
+  
+  #joint
+  A = cbind(as.vector(t(apply(100*model$pi12[(n*(1-burn)+1):n,,], c(2,3), mean))),
+            as.vector(t(apply(100*model$pi12[(n*(1-burn)+1):n,,], c(2,3), sd))),
+            as.vector(t(apply(100*model$pi12[(n*(1-burn)+1):n,,], c(2,3), quantile,probs=0.025))),
+            as.vector(t(apply(100*model$pi12[(n*(1-burn)+1):n,,], c(2,3), quantile,probs=0.5))),
+            as.vector(t(apply(100*model$pi12[(n*(1-burn)+1):n,,], c(2,3), quantile,probs=0.975))))
+  colnames(A) = colnames(df)
+  rn = c()
+  for (k1 in 1:K) {
+    for (k2 in 1:K) {
+      rn = c(rn,paste(k1,k2,sep=','))
+    }
+  }
+  rownames(A) = rn
+  df = rbind(df,A)
+  
+  colnames(df)[1:2] = c("Estimate","Standard Deviation")
+  
+  id1 = X1[,1]
+  id2 = X2[,1]
+  X1[,1]=1
+  X2[,1]=1
+  ll = log_lik_dual(X1,X2,y1,y2,pi1.e,pi1_2.e,beta.e,beta.e,sigma.e,sigma.e,id1,id2)
+  BIC = BIC_dual(X1,X2,y1,y2,pi1.e,pi1_2.e,beta.e,beta.e,sigma.e,sigma.e,id1,id2,z,z,constrain=TRUE)
+  
+  return(list(estimates = df,
+              log.likelihood = ll,
+              BIC = BIC))
+}
+
 
 #' summary_dual_MS
 #'

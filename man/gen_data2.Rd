@@ -4,7 +4,7 @@
 \alias{gen_data2}
 \title{gen_data}
 \usage{
-gen_data2(N, T1, T2, pi1, pi2, beta1, beta2, sigma1, sigma2)
+gen_data2(N, T1, T2, pi1, pi2, beta1, beta2, sigma1, sigma2, scale = FALSE)
 }
 \arguments{
 \item{N:}{Integer, number of tandems}
@@ -24,6 +24,8 @@ gen_data2(N, T1, T2, pi1, pi2, beta1, beta2, sigma1, sigma2)
 \item{sigma1:}{Float, variance for outcomes in series 1}
 
 \item{sigma2:}{Float, variance for outcomes in series 2}
+
+\item{scale:}{Boolean, TRUE to scale design matrix}
 }
 \value{
 List: \cr

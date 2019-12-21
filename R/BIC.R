@@ -15,7 +15,7 @@
 BIC = function(X,y,pi,beta,sigma,id,z) {
   ll = log_lik(X,y,pi,beta,sigma,id)
   n = length(y)
-  k = sum(z) + length(pi)-1 + length(sigma1)
+  k = sum(z) + length(pi)-1 + length(sigma)
   BIC = ll - 0.5*k*log(n)
   return(BIC)
 }

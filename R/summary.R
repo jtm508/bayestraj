@@ -1,3 +1,115 @@
+#' summary_single
+#'
+#' Summarize output of single trajectory model
+#'
+#' @param model: List, output from dualtraj or dualtrajMS 
+#' @param X: Matrix, design matrix for series 1. 1st column should be the id.
+#' @param y: Vector, outcomes for series 1
+#' @param z: Matrix, K x dim(X)[2] indicator matrix indicating which variables to inlcude in each group.
+#' @param burn: float, fraction of draws to keep for post burn-in period.
+#'
+#' @export
+
+summary_single = function(model,X,y,z,burn) {
+  n = dim(model$c)[1]
+  K = length(model$beta)
+  
+  df = data.frame(A= numeric(0), B= numeric(0), C= numeric(0), D= numeric(0),E= numeric(0))
+
+  beta.e = matrix(0,nrow=K,ncol=max(do.call(rbind,lapply(model$beta,dim))[,2]))
+  for (k in 1:K) {
+    A = cbind(colMeans(tail(model$beta[[k]],n*burn)),
+              apply(tail(model$beta[[k]],n*burn), 2, sd),
+              t(apply(tail(model$beta[[k]],n*burn),2,quantile,probs=c(0.025,0.5,0.975))))
+    beta.e[k,z[k,]==1] = A[,1]
+    rownames(A) = sprintf(paste("beta_",k,"[%d]",sep=''),seq(1:dim(model$beta[[k]])[2]))
+    df = rbind(df,A)
+  }
+  
+  A = as.data.frame(t(c(mean(tail(sqrt(model$sigma),n*burn)),
+                        sd(tail(sqrt(model$sigma),n*burn)),
+                        quantile(tail(sqrt(model$sigma),n*burn),probs=c(0.025,0.5,0.975)))))
+  sigma.e = as.numeric(A[1])^2
+  rownames(A) = "sigma"
+  df = rbind(df,A)
+  
+  A = cbind(colMeans(tail(100*model$pi,n*burn)),
+            apply(tail(100*model$pi,n*burn),2,sd),
+            t(apply(tail(100*model$pi,n*burn),2,quantile,probs=c(0.025,0.5,0.975))))
+  pi.e = A[,1]/100
+  rownames(A) = sprintf("pi[%d]",seq(1:K))
+  df = rbind(df,A)
+  
+  id = X[,1]
+  X[,1]=1
+  ll = log_lik(X,y,pi,beta.e,sigma.e,id)
+  BIC =  BIC(X,y,pi,beta.e,sigma.e,id,z)
+  
+  return(list(estimates = df,
+              log.likelihood = ll,
+              BIC = BIC))
+}
+
+#' summary_single_MS
+#'
+#' Summarize output of single trajectory model with Bayesian model averaging.
+#'
+#' @param model: List, output from dualtraj or dualtrajMS 
+#' @param X: Matrix, design matrix for series 1. 1st column should be the id.
+#' @param y: Vector, outcomes for series 1
+#' @param burn: float, fraction of draws to keep for post burn-in period.
+#'
+#' @export
+
+summary_single_MS = function(model,X,y,burn) {
+  n = dim(model$c)[1]
+  K = length(model$beta)
+  
+  df = data.frame(A= numeric(0), B= numeric(0), C= numeric(0), D= numeric(0),E= numeric(0),F= numeric(0))
+  
+  beta.e = matrix(0,nrow=K,ncol=dim(X)[2])
+  sigma.e = rep(NA,K)
+  for (k in 1:K) {
+    A = cbind(colMeans(tail(model$beta[[k]],n*burn)),
+              apply(tail(model$beta[[k]],n*burn), 2, sd),
+              t(apply(tail(model$beta[[k]],n*burn),2,quantile,probs=c(0.025,0.5,0.975))),
+              colMeans(model$z[[k]]))
+    beta.e[k,] = A[,4]
+    rownames(A) = sprintf(paste("beta_",k,"[%d]",sep=''),seq(1:dim(model$beta[[k]])[2]))
+    df = rbind(df,A)
+    
+    A = as.data.frame(t(c(mean(tail(sqrt(model$sigma[,k]),n*burn)),
+                          sd(tail(sqrt(model$sigma[,k]),n*burn)),
+                          quantile(tail(sqrt(model$sigma[,k]),n*burn),probs=c(0.025,0.5,0.975)),
+                          NA)))
+    sigma.e[k] = as.numeric(A[1])^2
+    rownames(A) = paste("sigma_",k,sep='')
+    df = rbind(df,A)
+  }
+  
+  A = cbind(colMeans(tail(100*model$pi,n*burn)),
+            apply(tail(100*model$pi,n*burn),2,sd),
+            t(apply(tail(100*model$pi,n*burn),2,quantile,probs=c(0.025,0.5,0.975))),
+            NA)
+  pi1.e = A[,1]/100
+  rownames(A) = sprintf("pi[%d]",seq(1:K))
+  df = rbind(df,A)
+  
+  colnames(df)[1:2] = c("Estimate","Standard Deviation")
+  colnames(df)[6] = "Inclusion Prob."
+  
+  id = X[,1]
+  X[,1]=1
+  z = (beta.e != 0)*1
+  
+  ll = log_lik(X,y,pi,beta.e,sigma.e,id)
+  BIC =  BIC(X,y,pi,beta.e,sigma.e,id,z)
+  
+  return(list(estimates = df,
+              log.likelihood = ll,
+              BIC = BIC))
+}
+
 #' summary_dual
 #'
 #' Summarize output of dual trajectory model

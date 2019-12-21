@@ -8,6 +8,7 @@
 #' @param y2: Vector, outcomes for series 2
 #' @param K1: Integer, number of latent classes in series 1
 #' @param K2: Integer, number of latent classes in series 2
+#' @param time_index: Integer, column of X corresponding to time
 #' @param iterations: Integer, number of MCMC iterations
 #' @param thin: Integer, store every 'thin' iteration
 #' @param dispIter: Integer, frequency of printing the iteration number
@@ -17,7 +18,7 @@
 #'
 #' @export
 
-dualtrajMS = function(X1,X2,y1,y2,K1,K2,iterations,thin=1,dispIter=10) {
+dualtrajMS = function(X1,X2,y1,y2,K1,K2,time_index,iterations,thin=1,dispIter=10) {
   #extract ids from design matrices
   id1 = X1[,1]
   id2 = X2[,1]
@@ -33,6 +34,9 @@ dualtrajMS = function(X1,X2,y1,y2,K1,K2,iterations,thin=1,dispIter=10) {
   #length of data
   N1 = length(id1)
   N2 = length(id2)
+  
+  #number of non-time covariates
+  ncov = time_index - 2
   
   #replace id with intercept column
   X1[,1]=1
@@ -88,7 +92,7 @@ dualtrajMS = function(X1,X2,y1,y2,K1,K2,iterations,thin=1,dispIter=10) {
     }
     
     #draw groups
-    c1 = drawgroup(X1,y1,N,id1,c2,pi1,pi1_2,beta1,sigma1,K1)
+    c1 = drawgroup_dual(X1,y1,N,id1,c2,pi1,pi1_2,beta1,sigma1,K1)
     c2 = drawgroup2(X2,y2,N,id2,c1,pi1,pi1_2,beta2,sigma2,K2)
     
     #reindex according to new groups
@@ -105,11 +109,16 @@ dualtrajMS = function(X1,X2,y1,y2,K1,K2,iterations,thin=1,dispIter=10) {
       #recalculate marginal likelihood for new group memberships
       marg.lik1.c[j] = marg_lik(y1[index1==j], X1[index1==j,z1[j,]==1,drop=FALSE])
       #sample z
-      for (b in resamp(3:d1)) {
-        zlist = drawz(z1,j,b,y1,X1,index1,marg.lik1.c[j])
-        z1[j,b] = zlist[[1]]
-        marg.lik1.c[j] = zlist[[2]]
+      if (ncov > 0) {
+        for (b in resamp(2:(1+ncov))) {
+          zlist = drawz(z1,j,b,y1,X1,index1,marg.lik1.c[j])
+          z1[j,b] = zlist[[1]]
+          marg.lik1.c[j] = zlist[[2]]
+        }
       }
+      #draw polynomial degree
+      z1[j,time_index:d1] = drawpoly(y1[index1==j], X1[index1==j,,drop=FALSE],time_index,z1[j,])
+      
       #some calculations
       X.temp = X1[index1==j,z1[j,]==1,drop=FALSE]
       y.temp = y1[index1==j]
@@ -120,22 +129,28 @@ dualtrajMS = function(X1,X2,y1,y2,K1,K2,iterations,thin=1,dispIter=10) {
       SSR = sum((y.temp - X.temp %*% beta.ols)^2)
       
       #sample sigma^2
-      sigma1[j] = rinvgamma(1,n/2,SSR/2 + crossprod(beta.ols,A) %*% beta.ols / (2 * (g + 1)))
+      #sigma1[j] = rinvgamma(1,n/2,SSR/2 + crossprod(beta.ols,A) %*% beta.ols / (2 * (g + 1)))
+      sigma1[j] = rinvgamma(1,n/2,SSR/2)
       
       #sample beta
       beta1[j,] = rep(0,d1)
-      beta1[j,z1[j,]==1] = as.vector(rmvnorm(1, g / (g + 1) * beta.ols, g / (g + 1)  * sigma1[j] * solve(A)))
+      #beta1[j,z1[j,]==1] = as.vector(rmvnorm(1, g / (g + 1) * beta.ols, g / (g + 1)  * sigma1[j] * solve(A)))
+      beta1[j,z1[j,]==1] = as.vector(rmvnorm(1, beta.ols, g / (g + 1)  * sigma1[j] * solve(A)))
     }
     
     for (j in 1:K2) {
       #recalculate marginal likelihood for new group memberships
       marg.lik2.c[j] = marg_lik(y2[index2==j], X2[index2==j,z2[j,]==1,drop=FALSE])
-      #sample z
-      for (b in resamp(3:d2)) {
-        zlist = drawz(z2,j,b,y2,X2,index2,marg.lik2.c[j])
-        z2[j,b] = zlist[[1]]
-        marg.lik2.c[j] = zlist[[2]]
+      if (ncov > 0) {
+        for (b in resamp(2:(1+ncov))) {
+          zlist = drawz(z2,j,b,y2,X2,index2,marg.lik2.c[j])
+          z2[j,b] = zlist[[1]]
+          marg.lik2.c[j] = zlist[[2]]
+        }
       }
+      #draw polynomial degree
+      z2[j,time_index:d2] = drawpoly(y2[index2==j], X2[index2==j,,drop=FALSE],time_index,z2[j,])
+      
       #some calculations
       X.temp = X2[index2==j,z2[j,]==1,drop=FALSE]
       y.temp = y2[index2==j]
@@ -146,11 +161,13 @@ dualtrajMS = function(X1,X2,y1,y2,K1,K2,iterations,thin=1,dispIter=10) {
       SSR = sum((y.temp - X.temp %*% beta.ols)^2)
       
       #sample sigma^2
-      sigma2[j] = rinvgamma(1,n/2,SSR/2 + crossprod(beta.ols,A) %*% beta.ols / (2 * (g + 1)))
+      #sigma2[j] = rinvgamma(1,n/2,SSR/2 + crossprod(beta.ols,A) %*% beta.ols / (2 * (g + 1)))
+      sigma2[j] = rinvgamma(1,n/2,SSR/2)
       
       #sample beta
       beta2[j,] = rep(0,d2)
-      beta2[j,z2[j,]==1] = as.vector(rmvnorm(1, g / (g + 1) * beta.ols, g / (g + 1)  * sigma2[j] * solve(A)))
+      #beta2[j,z2[j,]==1] = as.vector(rmvnorm(1, g / (g + 1) * beta.ols, g / (g + 1)  * sigma2[j] * solve(A)))
+      beta2[j,z2[j,]==1] = as.vector(rmvnorm(1, beta.ols, g / (g + 1)  * sigma2[j] * solve(A)))
     }
     
     if (q %% thin == 0) {

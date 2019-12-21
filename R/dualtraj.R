@@ -8,8 +8,8 @@
 #' @param y2: Vector, outcomes for series 2
 #' @param K1: Integer, number of latent classes in series 1
 #' @param K2: Integer, number of latent classes in series 2
-#' @param z1: Matrix, K1 x dim(X1)[2] indicator matrix indicating which variables to inlcude in each group.
-#' @param z2: Matrix, K2 x dim(X2)[2] indicator matrix indicating which variables to inlcude in each group.
+#' @param z1: Matrix, K1 x dim(X1)[2] indicator matrix indicating which variables to include in each group.
+#' @param z2: Matrix, K2 x dim(X2)[2] indicator matrix indicating which variables to include in each group.
 #' @param iterations: Integer, number of MCMC iterations
 #' @param thin: Integer, store every 'thin' iteration
 #' @param dispIter: Integer, frequency of printing the iteration number
@@ -98,7 +98,7 @@ for (q in 1:iterations) {
   }
   
   #draw groups
-  c1 = drawgroup(X1,y1,N,id1,c2,pi1,pi1_2,beta1,sigma1,K1)
+  c1 = drawgroup_dual(X1,y1,N,id1,c2,pi1,pi1_2,beta1,sigma1,K1)
   c2 = drawgroup2(X2,y2,N,id2,c1,pi1,pi1_2,beta2,sigma2,K2)
   
   #reindex according to new groups

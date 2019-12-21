@@ -89,7 +89,7 @@ for (q in 1:iterations) {
   }
   
   #draw groups
-  c1 = drawgroup(X1,y1,N,id1,c2,pi1,pi1_2,beta,sigma,K)
+  c1 = drawgroup_dual(X1,y1,N,id1,c2,pi1,pi1_2,beta,sigma,K)
   c2 = drawgroup2(X2,y2,N,id2,c1,pi1,pi1_2,beta,sigma,K)
   
   #reindex according to new groups

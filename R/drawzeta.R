@@ -125,7 +125,7 @@ rpg.devroye.1 <- function(Z)
 #' This is a slight modification of the BayesLogit mlogit.R function
 #'
 #' @param c: Vector, group memberships
-#' @param z: Matrix, design matrix
+#' @param W: Matrix, design matrix
 #' @param zeta: Matrix, previous draw of mnlogit parameters
 #' @param N: Integer, number of units
 #' @param P: Integer, number of covariates
@@ -134,7 +134,7 @@ rpg.devroye.1 <- function(Z)
 #' @export
 
 
-drawzeta = function(c,Z,zeta,N,P,J){
+drawzeta = function(c,W,zeta,N,P,J){
   
   Y = matrix(0,nrow=N,ncol=J)
   Y[cbind(seq_along(c), c)] = 1
@@ -144,8 +144,8 @@ drawzeta = function(c,Z,zeta,N,P,J){
   n=rep(1,nrow(as.matrix(y)))
   
   #this stuff could probably be precomputed
-  m.0=array(0, dim=c(ncol(Z), ncol(y)))
-  P.0=array(0, dim=c(ncol(Z), ncol(Z), ncol(y)))
+  m.0=array(0, dim=c(ncol(W), ncol(y)))
+  P.0=array(0, dim=c(ncol(W), ncol(W), ncol(y)))
   b.0 = matrix(0, P, J-1);
   for (j in 1:(J-1)) 
     b.0[,j] = P.0[,,j] %*% m.0[,j];
@@ -157,18 +157,18 @@ drawzeta = function(c,Z,zeta,N,P,J){
   
   for (j in 1:(J-1)) {
     ## For now recompute at each iteration.  Try taking out later.
-    A = rowSums( exp(Z %*% zeta[,-j]) );
+    A = rowSums( exp(W %*% zeta[,-j]) );
     
     c.j   = log(A);
-    eta.j = Z %*% zeta[,j] - c.j;
+    eta.j = W %*% zeta[,j] - c.j;
     
     ## omega.j
     for (q in 1:N)
       w[q,j] = rpg.devroye.1(eta.j[q])$x;
     
     ## beta.j
-    PL.j = t(Z) %*% (Z * w[,j]);
-    bL.j = t(Z) %*% (kappa[,j] + c.j * w[,j]);
+    PL.j = t(W) %*% (W * w[,j]);
+    bL.j = t(W) %*% (kappa[,j] + c.j * w[,j]);
     
     P1.j = PL.j + P.0[,,j];
     ## Can speed up using Choleksy.

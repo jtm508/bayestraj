@@ -1,11 +1,12 @@
 #' gen_data_traj
 #'
 #' Generate data for a single trajectory model
-#' @param N: Integer, number of tandems
+#' @param N: Integer, number of units
 #' @param T1: Integer, number of time periods
 #' @param pi1: Vector, probability of being assigned to each group
 #' @param beta: Matrix, coefficients for each group
 #' @param sigma: Float, variance for outcomes in series 1
+#' @param zeta: Matrix, coefficients for group memberships
 #' @param scale: Boolean, TRUE to scale design matrix
 #'
 #'

@@ -4,12 +4,12 @@
 \alias{drawzeta}
 \title{drawzeta}
 \usage{
-drawzeta(c, Z, zeta, N, P, J)
+drawzeta(c, W, zeta, N, P, J)
 }
 \arguments{
 \item{c:}{Vector, group memberships}
 
-\item{z:}{Matrix, design matrix}
+\item{W:}{Matrix, design matrix}
 
 \item{zeta:}{Matrix, previous draw of mnlogit parameters}
 

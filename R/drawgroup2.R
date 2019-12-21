@@ -6,7 +6,7 @@
 #' @param y: Vector, outcomes
 #' @param N: Integer, number of tandems
 #' @param id: Vector, tandem for each row of X and Y
-#' @param g2: Vector, group membership for series 2
+#' @param g1: Vector, group membership for series 1
 #' @param pi1: Vector, group probabilities for series 1
 #' @param pi1_2: Vector, transition probabilities for series 2
 #' @param beta: Matrix, likelihood coefficients for series 1

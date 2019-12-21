@@ -12,5 +12,5 @@ marg_lik(y, X)
 \item{X:}{Matrix, design matrix}
 }
 \description{
-Calculate marginal likelihood under unit-information Zellner's g-prior
+Calculate log marginal likelihood under unit-information Zellner's g-prior
 }

@@ -5,8 +5,9 @@
 #' @param X: Matrix, design matrix. 1st column should be the id.
 #' @param y: Vector, outcomes
 #' @param K: Integer, number of latent classes 
-#' @param z: Matrix, K x dim(X)[2] indicator matrix indicating which variables to inlcude in each group.
+#' @param z: Matrix, K x dim(X)[2] indicator matrix indicating which variables to include in each group.
 #' @param iterations: Integer, number of MCMC iterations
+#' @param W: Matrix, design matrix for group membership
 #' @param thin: Integer, store every 'thin' iteration
 #' @param dispIter: Integer, frequency of printing the iteration number
 #' @param ll: Boolean, Set to TRUE to display the maximum log-likelihood over all the draws.
@@ -16,7 +17,7 @@
 #'
 #' @export
 
-traj = function(X,y,K,z,iterations,Z=matrix(),thin=1,dispIter=10,ll=FALSE) {
+traj = function(X,y,K,z,iterations,W=matrix(),thin=1,dispIter=10,ll=FALSE) {
 
 #extract ids from design matrices
 id = X[,1]
@@ -38,7 +39,7 @@ X[,1]=1
 d = dim(X)[2]
 
 #number of group membership covariates
-P = dim(Z)[2]
+P = dim(W)[2]
 
 #hyperparameters
 alpha = rep(1,K)
@@ -88,8 +89,8 @@ for (q in 1:iterations) {
   }
   else {
     #draw pi
-    zeta = drawzeta(c,Z,zeta,N,P,K)
-    u = Z %*% zeta
+    zeta = drawzeta(c,W,zeta,N,P,K)
+    u = W %*% zeta
     pi = exp(u)/rowSums(exp(u))
     
     #draw group

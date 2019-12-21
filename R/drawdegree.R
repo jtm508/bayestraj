@@ -1,8 +1,7 @@
-#' drawz
+#' drawdegree
 #'
-#' Draw a component of z, the vector determining which variables are included in the model.
+#' Draw a component of d, the degree of the polynomial
 #'
-#' @param z: Matrix, current variable selection matrix
 #' @param j: Integer, class flag
 #' @param b: Integer, element of z[j,] to draw
 #' @param y: Vector, outcomes
@@ -12,7 +11,7 @@
 #'
 #' @export
 
-drawz = function(z,j,b,y,X,index,marg.lik.c) {
+drawdegree = function(j,b,y,X,index,marg.lik.c) {
   zp = z[j,]
   zp[b] = 1 - zp[b]
   marg.lik.p = marg_lik(y[index==j], X[index==j,zp==1,drop=FALSE])

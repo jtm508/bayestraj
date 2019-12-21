@@ -4,7 +4,8 @@
 \alias{log_lik_dual}
 \title{log_lik_dual}
 \usage{
-log_lik_dual(X1, X2, y1, y2, pi1, pi1_2, beta1, beta2, sigma1, sigma2, id1, id2)
+log_lik_dual(X1, X2, y1, y2, pi1, pi1_2, beta1, beta2, sigma1, sigma2, id1,
+  id2)
 }
 \arguments{
 \item{X1:}{Matrix, design matrix group 1}

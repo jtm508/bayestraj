@@ -4,7 +4,7 @@
 \alias{traj}
 \title{traj}
 \usage{
-traj(X, y, K, z, iterations, Z = matrix(), thin = 1, dispIter = 10,
+traj(X, y, K, z, iterations, W = matrix(), thin = 1, dispIter = 10,
   ll = FALSE)
 }
 \arguments{
@@ -14,9 +14,11 @@ traj(X, y, K, z, iterations, Z = matrix(), thin = 1, dispIter = 10,
 
 \item{K:}{Integer, number of latent classes}
 
-\item{z:}{Matrix, K x dim(X)[2] indicator matrix indicating which variables to inlcude in each group.}
+\item{z:}{Matrix, K x dim(X)[2] indicator matrix indicating which variables to include in each group.}
 
 \item{iterations:}{Integer, number of MCMC iterations}
+
+\item{W:}{Matrix, design matrix for group membership}
 
 \item{thin:}{Integer, store every 'thin' iteration}
 

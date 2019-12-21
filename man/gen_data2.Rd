@@ -4,7 +4,8 @@
 \alias{gen_data2}
 \title{gen_data}
 \usage{
-gen_data2(N, T1, T2, pi1, pi2, beta1, beta2, sigma1, sigma2, scale = FALSE)
+gen_data2(N, T1, T2, pi1, pi2, beta1, beta2, sigma1, sigma2,
+  scale = FALSE)
 }
 \arguments{
 \item{N:}{Integer, number of tandems}

@@ -20,7 +20,7 @@
 #'    Y2: Vector, outcomes for series 2 \cr
 #' @export
 
-gen_data2 = function(N,T1,T2,pi1,pi2,beta1,beta2,sigma1,sigma2,scale=FALSE) {
+gen_data2 = function(N,T1,T2,pi1,pi2,beta1,beta2,sigma1,sigma2,poly=1,scale=FALSE) {
   if(length(pi1) != dim(pi2)[1])
     stop("Incompatible dimensions for pi1 and pi2")
   
@@ -39,8 +39,8 @@ gen_data2 = function(N,T1,T2,pi1,pi2,beta1,beta2,sigma1,sigma2,scale=FALSE) {
   d2 = dim(beta2)[2]
   
   #number of random uniform covariates.
-  ncov1 = d1 - 3
-  ncov2 = d2 - 3
+  ncov1 = d1 - poly - 1 
+  ncov2 = d2 - poly - 1
   
   #time dimension
   time1 = rep(1:T1,N)
@@ -48,14 +48,20 @@ gen_data2 = function(N,T1,T2,pi1,pi2,beta1,beta2,sigma1,sigma2,scale=FALSE) {
   
   #generate design matrices
   X1 = cbind(rep(1,N*T1),
-             matrix(runif(N*T1*ncov1)*10,N*T1,ncov1),
-             time1,
-             time1^2,deparse.level=FALSE)
+             matrix(runif(N*T1*ncov1)*10,N*T1,ncov1))
+  if (poly > 0){
+    for (i in 1:poly){
+      X1 = cbind(X1,time1^i)
+    }
+  }
   
   X2 = cbind(rep(1,N*T2),
-             matrix(runif(N*T2*ncov2)*10,N*T2,ncov2),
-             time2,
-             time2^2,deparse.level=FALSE)
+             matrix(runif(N*T2*ncov2)*10,N*T2,ncov2))
+  if (poly > 0){
+    for (i in 1:poly){
+      X2 = cbind(X2,time2^i)
+    }
+  }
   
   if (scale == TRUE) {
     X1[,-1] = scale(X1[,-1])

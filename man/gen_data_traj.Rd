@@ -7,7 +7,7 @@
 gen_data_traj(N, T1, pi, beta, sigma, zeta = matrix(), scale = FALSE)
 }
 \arguments{
-\item{N:}{Integer, number of tandems}
+\item{N:}{Integer, number of units}
 
 \item{T1:}{Integer, number of time periods}
 
@@ -16,6 +16,8 @@ gen_data_traj(N, T1, pi, beta, sigma, zeta = matrix(), scale = FALSE)
 \item{beta:}{Matrix, coefficients for each group}
 
 \item{sigma:}{Float, variance for outcomes in series 1}
+
+\item{zeta:}{Matrix, coefficients for group memberships}
 
 \item{scale:}{Boolean, TRUE to scale design matrix}
 }

@@ -4,7 +4,8 @@
 \alias{dualtrajMS}
 \title{dualtraj}
 \usage{
-dualtrajMS(X1, X2, y1, y2, K1, K2, iterations, thin = 1, dispIter = 10)
+dualtrajMS(X1, X2, y1, y2, K1, K2, time_index, iterations, thin = 1,
+  dispIter = 10)
 }
 \arguments{
 \item{X1:}{Matrix, design matrix for series 1. 1st column should be the id.}
@@ -18,6 +19,8 @@ dualtrajMS(X1, X2, y1, y2, K1, K2, iterations, thin = 1, dispIter = 10)
 \item{K1:}{Integer, number of latent classes in series 1}
 
 \item{K2:}{Integer, number of latent classes in series 2}
+
+\item{time_index:}{Integer, column of X corresponding to time}
 
 \item{iterations:}{Integer, number of MCMC iterations}
 

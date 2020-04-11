@@ -20,9 +20,9 @@ dualtraj(X1, X2, y1, y2, K1, K2, z1, z2, iterations, thin = 1,
 
 \item{K2:}{Integer, number of latent classes in series 2}
 
-\item{z1:}{Matrix, K1 x dim(X1)[2] indicator matrix indicating which variables to inlcude in each group.}
+\item{z1:}{Matrix, K1 x dim(X1)[2] indicator matrix indicating which variables to include in each group.}
 
-\item{z2:}{Matrix, K2 x dim(X2)[2] indicator matrix indicating which variables to inlcude in each group.}
+\item{z2:}{Matrix, K2 x dim(X2)[2] indicator matrix indicating which variables to include in each group.}
 
 \item{iterations:}{Integer, number of MCMC iterations}
 

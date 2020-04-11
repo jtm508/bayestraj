@@ -1,4 +1,4 @@
-#' BIC
+#' BIC_calc
 #'
 #' Computes BIC for latent trajectory model
 #'
@@ -12,7 +12,7 @@
 #'
 #' @export
 
-BIC = function(X,y,pi,beta,sigma,id,z) {
+BIC_calc = function(X,y,pi,beta,sigma,id,z) {
   ll = log_lik(X,y,pi,beta,sigma,id)
   n = length(y)
   k = sum(z) + length(pi)-1 + length(sigma)
@@ -20,7 +20,7 @@ BIC = function(X,y,pi,beta,sigma,id,z) {
   return(BIC)
 }
 
-#' BIC_dual
+#' BIC_calc_dual
 #'
 #' Compute BIC for dual latent trajectory model
 #'
@@ -41,7 +41,7 @@ BIC = function(X,y,pi,beta,sigma,id,z) {
 #'
 #' @export
 #' 
-BIC_dual = function(X1,X2,y1,y2,pi1,pi1_2,beta1,beta2,sigma1,sigma2,id1,id2,z1,z2,constrain=FALSE) {
+BIC_calc_dual = function(X1,X2,y1,y2,pi1,pi1_2,beta1,beta2,sigma1,sigma2,id1,id2,z1,z2,constrain=FALSE) {
   ll = log_lik_dual(X1,X2,y1,y2,pi1,pi1_2,beta1,beta2,sigma1,sigma2,id1,id2)
   n = length(y1) + length(y2)
   k = sum(z1) + sum(z2)+ length(pi1_2)-1 + length(sigma1) + length(sigma2)

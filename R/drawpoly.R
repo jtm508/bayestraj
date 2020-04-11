@@ -10,18 +10,20 @@
 #' @export
 
 drawpoly = function(y,X,time_index,z) {
-  D = dim(X)[2] - time_index + 1
+  D = dim(X)[2] - time_index + 1 #maximum polynomial degree
   marg.lik = rep(0,D+1)
   z[time_index:length(z)] = 0
-  marg.lik[1] = marg_lik(y, X[,z %in% c(-1,1),drop=FALSE])
+  marg.lik[1] = marg_lik(y, X[,z==1,drop=FALSE])
   for (d in 1:D) {
     z[time_index+d-1] = 1
-    marg.lik[d+1] = marg_lik(y, X[,z %in% c(-1,1),drop=FALSE])
+    marg.lik[d+1] = marg_lik(y, X[,z==1,drop=FALSE])
   }
   p = logp(marg.lik)
   d_new = sample(0:D,1,prob=p)
   z_new = rep(0,D)
-  z_new[1:d_new] = 1
+  if (d_new > 0) {
+    z_new[1:d_new] = 1
+  }
   return(z_new)
 }
 

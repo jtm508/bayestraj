@@ -2,9 +2,9 @@
 #'
 #' Estimate the trajectory model with model averaging
 #'
-#' @param X: Matrix, design matrix for series 1. 1st column should be the id. Last columns of X correspond to time and polynomials of time.
-#' @param y: Vector, outcomes for series 1
-#' @param K: Integer, number of latent classes in series 1
+#' @param X: Matrix, design matrix for. 1st column should be the id. Last columns of X correspond to time and polynomials of time.
+#' @param y: Vector, outcomes
+#' @param K: Integer, number of latent classes
 #' @param time_index: Integer, column of X corresponding to time
 #' @param iterations: Integer, number of MCMC iterations
 #' @param thin: Integer, store every 'thin' iteration
@@ -47,7 +47,6 @@ trajMS = function(X,y,K,time_index,iterations,thin=1,dispIter=10) {
   sigma = rep(1,K)
   beta=matrix(0,nrow=K,ncol=d,byrow=TRUE)
   z = matrix(1,nrow=K,ncol=d)
-  z[,1] = -1 #intercept column. Code as -1 so its not double counted
   marg.lik.c = rep(0,K)
   
   #initialize storage
@@ -68,7 +67,6 @@ trajMS = function(X,y,K,time_index,iterations,thin=1,dispIter=10) {
     
     #draw groups
     c = drawgroup(X,y,N,id,pi,beta,sigma,K)
-    #print(table(c))
     
     #reindex according to new groups
     index = c[id]
@@ -79,7 +77,7 @@ trajMS = function(X,y,K,time_index,iterations,thin=1,dispIter=10) {
     #draw group parameters
     for (j in 1:K) {
       #recalculate marginal likelihood for new group memberships
-      marg.lik.c[j] = marg_lik(y[index==j], X[index==j,z[j,] %in% c(-1,1),drop=FALSE])
+      marg.lik.c[j] = marg_lik(y[index==j], X[index==j,z[j,]==1,drop=FALSE])
       #sample z
       if (ncov > 0) {
         for (b in resamp(2:(1+ncov))) {
@@ -92,7 +90,7 @@ trajMS = function(X,y,K,time_index,iterations,thin=1,dispIter=10) {
       z[j,time_index:d] = drawpoly(y[index==j], X[index==j,,drop=FALSE],time_index,z[j,])
       
       #some calculations
-      X.temp = X[index==j,z[j,] %in% c(-1,1),drop=FALSE]
+      X.temp = X[index==j,z[j,]==1,drop=FALSE]
       y.temp = y[index==j]
       n = length(y.temp)
       g = n
@@ -101,16 +99,12 @@ trajMS = function(X,y,K,time_index,iterations,thin=1,dispIter=10) {
       SSR = sum((y.temp - X.temp %*% beta.ols)^2)
       
       #sample sigma^2
-      X.tilde = X[index==j,z[j,]==1,drop=FALSE] #does not include intercept
-      y.tilde = y[index==j] - beta[j,1] #subtract intercept
-      A.tilde = crossprod(X.tilde)
-      beta.ols = as.vector(solve(A.tilde,crossprod(X.tilde,y.tilde)))
-      sigma[j] = rinvgamma(1,n/2,SSR/2 + (crossprod(beta.ols,A.tilde) %*% beta.ols) / (2 * (g + 1)))
+      sigma[j] = rinvgamma(1,n/2,SSR/2)
       
       #sample beta
-      beta[j,-1] = 0 #do not overwrite intercept
-      beta[j,z[j,]==1] = as.vector(rmvnorm(1, g / (g + 1) * beta.ols, g / (g + 1)  * sigma[j] * solve(A.tilde)))
-      beta[j,1] = drawintercept(X.tilde,y.temp,beta[j,z[j,]==1],sigma[j],n)
+      beta[j,] = rep(0,d)
+      beta[j,z[j,]==1] = as.vector(rmvnorm(1, beta.ols, g / (g + 1)  * sigma[j] * solve(A)))
+      
     }
     
     

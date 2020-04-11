@@ -7,19 +7,13 @@
 drawpoly(y, X, time_index, z)
 }
 \arguments{
-\item{z:}{Matrix, current variable selection matrix}
-
-\item{j:}{Integer, class flag}
-
-\item{b:}{Integer, element of z[j,] to draw}
-
 \item{y:}{Vector, outcomes}
 
 \item{X:}{Matrix, design matrix}
 
-\item{index:}{Vector: List of class assignments}
+\item{time_index:}{Integer, column of X corresponding to time}
 
-\item{marg.lik.c:}{Float: Current marginal likelihood}
+\item{z:}{Vector, current variable selection matrix}
 }
 \description{
 Draw the polynomial degree for time

@@ -1,0 +1,144 @@
+---
+title: "Bayesian GBTM"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{my-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+In this vignette we will demonstrate how to use BayesTraj to estimate a Bayesian GBTM with a normal likelihood. We will use simulated data in order to verify that the estimation routine can recover the true parameters, and to demonstrate how the data should be formatted before calling the estimation routines.
+
+Begin by loading the BayesTraj library:
+```{r setup}
+library(BayesTraj)
+```
+
+## Simulating Data
+First, we will simulate data. This will not be necessary in your own projects, but it is useful both for testing the package and for using as a template for formatting your own datasets.
+
+```{r}
+N=1000 #number of units
+T=9 #time periods
+pi=c(0.5,0.2,0.3) #group membership probabilities
+K = length(pi) #number of groups
+#coefficients
+beta=matrix(c(110,5,-0.5,
+              111,-2,0.1,
+              118,3,0.1),nrow=3,ncol=3,byrow=TRUE)
+sigma=2 #standard deviation of outcomes
+
+set.seed(1)
+data = gen_data(N=N,
+                T=T,
+                pi=pi,
+                beta=beta,
+                sigma=sigma,
+                poly = 2 #degree of polynomial
+                )
+```
+
+In this example we have simulated data for 1000 units with 9 time periods each, for a total of 9000 observations. We have chosen the group-membership probabilities to be 50%, 20%, and 30%. From this, the `gen_data` function can infer that there should be three groups.
+
+Each row of the `beta` matrix defines the trajectory coefficients. For example, the expected value at time $t$ in Group 1 is $110+5t-0.5t^2$. Sigma, defines the standard deviation of the outcomes.
+
+When calling the `gen_data` function, we also specify `poly=2` in order to tell model to use a second-degree polynomial for time. If there are more non-intercept columns of `beta` than `poly`, `gen_data` will generate random covariates corresponding to the remaining columns. In general, the last `poly` columns of the `beta` matrix correspond to the polynomial coefficients.
+
+Now let's take a look at the generated data. We can unpack the individual attributes from the data object.
+
+```{r}
+X=data$X
+y=data$Y
+```
+
+The first 18 rows of `X` are:
+
+```{r}
+print(head(X,18))
+```
+The first column identifies the unit. For example, the first 9 rows correspond to unit 1, the second 9 rows correspond to unit 2, and so forth. The second column is the time variable. Rows 1 and 10 correspond to time 1, rows 2 and 11 correspond to time 2, and so forth. Similarly, the third column is the square of the time column.
+
+Now we take a look at `y`. These are the outcomes. `y[1]` corresponds to the outcome for unit 1 at time 1. `y[2]` corresponds to the outcome for unit 1 at time 2, and so forth. The values of `y` must correspond with the rows of `X`. Therefore `X` and `y` should have the same length.
+
+```{r}
+print(head(y,18))
+```
+
+## Estimating the model
+We now turn our attention toward estimating the model. We can do this by calling the `traj` function. 
+
+```{r}
+iter = 5000
+thin = 1
+z = matrix(1,nrow=K,ncol=dim(X)[2])
+model = traj(X=X, #data matrix
+             y=y, #outcomes
+             K=K, #number of groups
+             z=z, #functional form matrix
+             iterations=iter, #number of iterations
+             thin=thin, #thinning
+             dispIter=1000) #Print a message every 1000 iterations
+```
+
+Here we run the model for 5000 MCMC iterations. Setting the `thin` parameter to 1 tells us to keep every sample. We can set `thin=10`, for example, to only keep 1 out of every 10 samples. Thinning is not necessary unless your computer has memory limitations. We also set `dispIter=1000` to tell the program to send us a message every 1000 MCMC iterations. This will help us monitor the progress of the program.
+
+The only argument we have not touched on yet is `z`. `z` allows us to specify which columns of `X` should be included in the model for each group. If `X` has $d$ columns, then `z` should be a $K \times d$ matrix.  In practice, this allows us to specify different polynomial degrees for different groups. `Z[i,j]` indicates whether to include the $j$th column of `X` in group i's model. The first column of `z` corresponds to the intercept and should always be set to 1. In this example, have set `z[i,j]=1` for each (i,j), indicating we'd like to use a second-degree polynomial for all three groups.
+
+Some researchers prefer to specify different polynomial in each group. For example, a researcher who wants 2nd-degree polynomials in groups 1 and 2, but a 1-degree polynomial in group 3, could specify z as follows:
+
+```{r}
+z_=matrix(c(1,1,1,
+            1,1,1,
+            1,1,0),nrow=3,ncol=3,byrow=TRUE)
+```
+
+## Analyzing the Model
+The model object contains the MCMC samples for each of the model's parameters. We can access the MCMC samples as follows, where each row represent an iteration of the MCMC:
+
+```{r}
+head(model$beta[[1]]) #group 1's coefficients
+head(model$beta[[2]]) #group 2's coefficients
+head(model$beta[[3]]) #group 3's coefficients
+head(model$sigma) #variance - NOT THE STANDARD DEVIATION
+model$c[1:6,1:10] #unit-level group memberships
+head(model$pi) #group-membership probabilities
+```
+
+A conveniant way to summarize the posterior is with the `summary_single` function:
+
+```{r}
+burn = 0.9
+summary = summary_single(model,X,y,z,burn)
+```
+The `burn` parameter specifies the fraction of draws to keep. In this example, we keep the last 90% of MCMC samples. The first 10% are discarded as the burn-in period.
+
+We can now print out a posterior summary to obtain the posterior mean, standard deviation, and 95% credible interval, as follows:
+
+```{r}
+print(summary$estimates)
+```
+## Checking for Label Switching and Local Modes
+One issue with GBTMs is the tendency for estimation routines to find a local mode which is not globally optimal. This is a problem for GBTMs estimated using maximum likelihood as well. To increase the probability that we are in a global optimum rather than a local optimum, we often run the Gibbs sampler using several seeds and print out the likelihood at the posterior mean:
+```{r}
+print(summary$log.likelihood)
+```
+We then use the seed which maximize the likelihood. This solution has no optimality guarantees, but we have found that we can often reach better optimas this way than other existing packages using maximum likelihood.
+
+The main drawback of the Bayesian approach is the tendency for label-switching and mode-switching. In the label-switching problem, the group labels switch in the middle of the algorithm. As a consequence, the group labeled "1" for the first 1000 draws may be labeled "2" in the second 1000 draws and vice versa. This would render and posterior summary of these coefficients meaningless. In our experience, label switching has not been a problem. However, switching between local-modes during the sampling process has occasionally been an issue.
+
+There is no consensus for the best way to deal with label and mode switching. Either problem can be easily observed by plotting the draws sequentially and checking for sudden and sustained breaks in the trend. For example, the plot below looks consistent throughout the post-burn-in samples:
+
+```{r}
+plot(model$beta[[1]][1000:5000,1],type='l')
+```
+
+This indicates that neither label-switching nor mode-siwtching occured. 
+
+If we do observe a sudden break, there are multiple possible solutions. From our experience, we usually find that re-estimating the model using a different seed will solve the problem with least amount of effort.

@@ -129,12 +129,10 @@ dualtrajMS = function(X1,X2,y1,y2,K1,K2,time_index,iterations,thin=1,dispIter=10
       SSR = sum((y.temp - X.temp %*% beta.ols)^2)
       
       #sample sigma^2
-      #sigma1[j] = rinvgamma(1,n/2,SSR/2 + crossprod(beta.ols,A) %*% beta.ols / (2 * (g + 1)))
       sigma1[j] = rinvgamma(1,n/2,SSR/2)
       
       #sample beta
       beta1[j,] = rep(0,d1)
-      #beta1[j,z1[j,]==1] = as.vector(rmvnorm(1, g / (g + 1) * beta.ols, g / (g + 1)  * sigma1[j] * solve(A)))
       beta1[j,z1[j,]==1] = as.vector(rmvnorm(1, beta.ols, g / (g + 1)  * sigma1[j] * solve(A)))
     }
     
@@ -161,12 +159,10 @@ dualtrajMS = function(X1,X2,y1,y2,K1,K2,time_index,iterations,thin=1,dispIter=10
       SSR = sum((y.temp - X.temp %*% beta.ols)^2)
       
       #sample sigma^2
-      #sigma2[j] = rinvgamma(1,n/2,SSR/2 + crossprod(beta.ols,A) %*% beta.ols / (2 * (g + 1)))
       sigma2[j] = rinvgamma(1,n/2,SSR/2)
       
       #sample beta
       beta2[j,] = rep(0,d2)
-      #beta2[j,z2[j,]==1] = as.vector(rmvnorm(1, g / (g + 1) * beta.ols, g / (g + 1)  * sigma2[j] * solve(A)))
       beta2[j,z2[j,]==1] = as.vector(rmvnorm(1, beta.ols, g / (g + 1)  * sigma2[j] * solve(A)))
     }
     

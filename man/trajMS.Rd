@@ -7,11 +7,11 @@
 trajMS(X, y, K, time_index, iterations, thin = 1, dispIter = 10)
 }
 \arguments{
-\item{X:}{Matrix, design matrix for series 1. 1st column should be the id. Last columns of X correspond to time and polynomials of time.}
+\item{X:}{Matrix, design matrix for. 1st column should be the id. Last columns of X correspond to time and polynomials of time.}
 
-\item{y:}{Vector, outcomes for series 1}
+\item{y:}{Vector, outcomes}
 
-\item{K:}{Integer, number of latent classes in series 1}
+\item{K:}{Integer, number of latent classes}
 
 \item{time_index:}{Integer, column of X corresponding to time}
 

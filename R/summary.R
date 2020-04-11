@@ -40,10 +40,11 @@ summary_single = function(model,X,y,z,burn) {
   rownames(A) = sprintf("pi[%d]",seq(1:K))
   df = rbind(df,A)
   
+  colnames(df)[1:2] = c("Estimate","Standard Deviation")
   id = X[,1]
   X[,1]=1
   ll = log_lik(X,y,pi,beta.e,sigma.e,id)
-  BIC =  BIC(X,y,pi,beta.e,sigma.e,id,z)
+  BIC =  BIC_calc(X,y,pi,beta.e,sigma.e,id,z)
   
   return(list(estimates = df,
               log.likelihood = ll,
@@ -103,7 +104,7 @@ summary_single_MS = function(model,X,y,burn) {
   z = (beta.e != 0)*1
   
   ll = log_lik(X,y,pi,beta.e,sigma.e,id)
-  BIC =  BIC(X,y,pi,beta.e,sigma.e,id,z)
+  BIC =  BIC_calc(X,y,pi,beta.e,sigma.e,id,z)
   
   return(list(estimates = df,
               log.likelihood = ll,
@@ -237,7 +238,7 @@ summary_dual = function(model,X1,X2,y1,y2,z1,z2,burn) {
   X1[,1]=1
   X2[,1]=1
   ll = log_lik_dual(X1,X2,y1,y2,pi1.e,pi1_2.e,beta1.e,beta2.e,sigma1.e,sigma2.e,id1,id2)
-  BIC = BIC_dual(X1,X2,y1,y2,pi1.e,pi1_2.e,beta1.e,beta2.e,sigma1.e,sigma2.e,id1,id2,z1,z2)
+  BIC = BIC_calc_dual(X1,X2,y1,y2,pi1.e,pi1_2.e,beta1.e,beta2.e,sigma1.e,sigma2.e,id1,id2,z1,z2)
   
   return(list(estimates = df,
               log.likelihood = ll,
@@ -344,7 +345,7 @@ summary_dual_constrained = function(model,X1,X2,y1,y2,z,burn) {
   X1[,1]=1
   X2[,1]=1
   ll = log_lik_dual(X1,X2,y1,y2,pi1.e,pi1_2.e,beta.e,beta.e,sigma.e,sigma.e,id1,id2)
-  BIC = BIC_dual(X1,X2,y1,y2,pi1.e,pi1_2.e,beta.e,beta.e,sigma.e,sigma.e,id1,id2,z,z,constrain=TRUE)
+  BIC = BIC_calc_dual(X1,X2,y1,y2,pi1.e,pi1_2.e,beta.e,beta.e,sigma.e,sigma.e,id1,id2,z,z,constrain=TRUE)
   
   return(list(estimates = df,
               log.likelihood = ll,
@@ -491,7 +492,7 @@ summary_dual_MS = function(model,X1,X2,y1,y2,burn) {
   z2 = (beta2.e != 0)*1
   
   ll = log_lik_dual(X1,X2,y1,y2,pi1.e,pi1_2.e,beta1.e,beta2.e,sigma1.e,sigma2.e,id1,id2)
-  BIC = BIC_dual(X1,X2,y1,y2,pi1.e,pi1_2.e,beta1.e,beta2.e,sigma1.e,sigma2.e,id1,id2,z1,z2)
+  BIC = BIC_calc_dual(X1,X2,y1,y2,pi1.e,pi1_2.e,beta1.e,beta2.e,sigma1.e,sigma2.e,id1,id2,z1,z2)
   
   return(list(estimates = df,
               log.likelihood = ll,

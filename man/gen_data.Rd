@@ -4,33 +4,27 @@
 \alias{gen_data}
 \title{gen_data}
 \usage{
-gen_data(N, T1, T2, pi1, pi2, beta1, beta2, sigma1, sigma2)
+gen_data(N, T, pi, beta, sigma, poly = 1, scale = FALSE)
 }
 \arguments{
-\item{N:}{Integer, number of tandems}
+\item{N:}{Integer, number of units}
 
-\item{T1:}{Integer, number of time periods in series 1}
+\item{T:}{Integer, number of time periods}
 
-\item{T2:}{Integer, number of time periods in series 2}
+\item{pi:}{Vector, probability of being assigned to each group}
 
-\item{pi1:}{Vector, probability of being assigned to each group in series 1}
+\item{beta:}{Matrix, coefficients for each group}
 
-\item{pi2:}{Matrix, transition matrix. Row j is the transition probabilities for when the series 1 group is j}
+\item{sigma:}{Float, variance for outcomes}
 
-\item{beta1:}{List, coefficients for each group in series 1}
+\item{poly:}{Integer, degree of polynomial}
 
-\item{beta2:}{List, coefficients for each group in series 2}
-
-\item{sigma1:}{Float, variance for outcomes in series 1}
-
-\item{sigma2:}{Float, variance for outcomes in series 2}
+\item{scale:}{Boolean, TRUE to scale design matrix}
 }
 \value{
 List: \cr
-   X1: Matrix, dataset for series 1 \cr
-   X2: Matrix, dataset for series 2 \cr
-   Y1: Vector, outcomes for series 1 \cr
-   Y2: Vector, outcomes for series 2 \cr
+   X: Matrix, dataset for series 1 \cr
+   Y: Vector, outcomes for series 1 \cr
 }
 \description{
 Generate data for a dual trajectory model

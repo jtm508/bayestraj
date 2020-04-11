@@ -11,3 +11,7 @@ RoxygenNote: 6.1.1
 Imports:
     MCMCpack (>= 1.3.0),
     mvtnorm
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

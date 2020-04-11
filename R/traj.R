@@ -111,8 +111,8 @@ for (q in 1:iterations) {
   sigma = drawsigma(X, y, beta, index, nu0, sigma0, N_)
   
   if (ll == TRUE) {
-    #ll.c = log_lik_dual(X1,X2,y1,y2,pi1,pi1_2,beta1,beta2,sigma1,sigma2,id1,id2)
-    #maxll = max(maxll,ll.c)
+    ll.c = log_lik(X,y,pi,beta,sigma,id)
+    maxll = max(maxll,ll.c)
   }
   
   if (q %% thin == 0) {
@@ -132,8 +132,7 @@ for (q in 1:iterations) {
 }
 
 if (ll == TRUE) {
-  print("FIX LIKELIHOOD CALCULATION")
-  #print(maxll)
+  print(maxll)
 }
 
 #return draws

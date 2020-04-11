@@ -1,30 +1,36 @@
 library(BayesTraj)
 
-N=1000
-T1=9
+#Generate Fake Data
+N=1000 #sample size
+T1=9 #time
 T2=9
-pi1=c(0.5,0.2,0.3)
+pi1=c(0.5,0.2,0.3) #group probabilities
+#transition matrix
 pi1_2=matrix(c(0.3,0.3,0.4,
              0.49,0.50,0.01,
              0.7,0.2,0.1),
            nrow=3,ncol=3,byrow=TRUE)
+#joint probability calculations
 pi12 = matrix(nrow=dim(pi1_2)[1],ncol=dim(pi1_2)[2])
 for (i in 1:dim(pi1_2)[1]) {
   for (j in 1:dim(pi1_2)[2]) {
     pi12[i,j] = pi1[i] * pi1_2[i,j]
   }
 }
+#coefficients
 beta1=matrix(c(110,5,-0.5,
                111,-2,0.1,
                118,3,0.1),nrow=3,ncol=3,byrow=TRUE)
 beta2=matrix(c(110,6,-0.6,
                111,-3,0.1,
                112,2,0.7),nrow=3,ncol=3,byrow=TRUE)
+#standard deviations
 sigma1=2
 sigma2=4
 
+#generate data
 set.seed(3)
-data = gen_data2(N=N,
+data = gen_data_dual(N=N,
                 T1=T1,
                 T2=T2,
                 pi1=pi1,
@@ -34,6 +40,7 @@ data = gen_data2(N=N,
                 sigma1=sigma1,
                 sigma2=sigma2,
                 poly = 2)
+#unpack data
 X1=data$X1
 X2=data$X2
 y1=data$Y1
@@ -57,6 +64,7 @@ stata = rbind(stata1,stata2)
 write.csv(stata,"C:/Users/jtm50/Dropbox/Emma and Justin's Secret Folder/DualTrajectory/Data/stata_simulation.csv",
           row.names=FALSE)
 
+#test model#
 iter = 10000
 thin = 1
 z1 = matrix(1,nrow=K1,ncol=dim(X1)[2])
@@ -75,12 +83,14 @@ model = dualtraj(X1=X1,
 burn = 0.9
 n1 = dim(model$c1)[1]
 
+#print output
 summary = summary_dual(model,X1,X2,y1,y2,z1,z2,burn)
 print(summary$estimates)
 print(summary$log.likelihood)
 print(summary$BIC)
 
 library(ggplot2)
+#function for creating multiple plots in single image
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
   
@@ -119,9 +129,11 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
 
 dev.off()
 
+#order of groups
 #1: 3, 1, 2
 #2: 2, 3, 1
 
+#Plot of transition probabilities
 df = model$pi1_2[(n1*(1-burn)+1):n1,,]
 dim(df) = c(n1*burn,K1*K2)
 df = as.data.frame(df)
@@ -153,6 +165,7 @@ multiplot(p11, p21, p31,
           p13, p23, p33,
           cols=3)
 
+#plot of joint group-memberhsip probabilities
 df = model$pi12[(n1*(1-burn)+1):n1,,]
 dim(df) = c(n1*burn,K1*K2)
 df = as.data.frame(df)

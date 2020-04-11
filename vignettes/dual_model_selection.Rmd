@@ -1,0 +1,169 @@
+---
+title: "Bayesian Dual GBTM"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{my-vignette}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+In this vignette we will demonstrate how to use BayesTraj to use Bayesian Model Averaging to estimate a Bayesian Dual GBTM with normal likelihoods. We will use simulated data in order to verify that the estimation routine can select the correct functional forms, recover the true parameters, and to demonstrate how the data should be formatted before calling the estimation routines.
+
+Begin by loading the BayesTraj library:
+```{r setup}
+library(BayesTraj)
+```
+
+## Simulating Data
+First, we will simulate data. This will not be necessary in your own projects, but it is useful both for testing the package and for using as a template for formatting your own datasets.
+
+```{r}
+N=1000 #number of units
+T1=9 #Time periods for Group 1
+T2=9 #Time periods for Group 2
+pi1=c(0.5,0.2,0.3) #Group 1 membership probabilities
+#Transition Matrix
+pi1_2=matrix(c(0.3,0.3,0.4,
+               0.2,0.5,0.3,
+               0.7,0.2,0.1),
+             nrow=3,ncol=3,byrow=TRUE)
+K1 = length(pi1) #Number of groups in series 1
+K2 = dim(pi1_2)[2] #Number of groups in series 2
+#Coefficients for Series 1
+beta1=matrix(c(100,10,-0.5,0.1,
+               80,-1,0.5,0,
+               120,20,-2,0),nrow=3,ncol=4,byrow=TRUE)
+#Coefficients for Series 2
+beta2=matrix(c(90,0.4,0,0,
+               50,1,-0.5,0,
+               100,-30,3,-0.3),nrow=3,ncol=4,byrow=TRUE)
+sigma1=16 #standard deviation of Series 1 outcomes
+sigma2=36 #standard deviation of Series 2 outcomes
+
+set.seed(1)
+data = gen_data_dual(N=N,
+                T1=T1,
+                T2=T2,
+                pi1=pi1,
+                pi2=pi1_2,
+                beta1=beta1,
+                beta2=beta2,
+                sigma1=sigma1,
+                sigma2=sigma2,
+                poly = 3) #degree of polynomial
+```
+
+In this example we have simulated data for 1000 paired-units with 9 time periods each, for a total of 18000 observations. While we have set each unit to have observations in 9 time periods, the estmation function below allows for the number of observations to vary. We have chosen the Group 1 membership probabilities to be 50%, 20%, and 30%. `pi1_2` is the transition matrix. `pi1_2[i,j]` represents the probability that the second pair member is in Group j conditional on the first pair member being in Group i. From this, the `gen_data_dual` function can infer that there should be three groups for both series.
+
+Each row of the `beta` matrices defines the trajectory coefficients for the respective groups. For example, the expected value at time $t$ in Series 1 Group 1 is $100+10t-0.5t^2 + 0.1t^3$. Sigma1 and sigma2 define the standard deviation of the outcomes.
+
+When calling the `gen_data_dual` function, we also specify `poly=2` in order to tell model to use a second-degree polynomial for time. If there are more non-intercept columns of `beta` than `poly`, `gen_data_dual` will generate random covariates corresponding to the remaining columns. In general, the last `poly` columns of the `beta` matrices correspond to the polynomial coefficients.
+
+Please note that we have selected `beta` coefficients corresponding to various polynomial degress. Of the six groups in the data, 3 have third-degree polynomials, two have second-degree polynomials, and one has a first-degree polynomial.
+
+Now let's take a look at the generated data. We can unpack the individual attributes from the data object.
+
+```{r}
+X1=data$X1
+X2=data$X2
+y1=data$Y1
+y2=data$Y2
+```
+
+While we will restrict our discussion to the first series, everything applies to the second series as well. The first 18 rows of `X1` are:
+
+```{r}
+print(head(X1,18))
+```
+The first column identifies the unit. For example, the first 9 rows correspond to unit 1, the second 9 rows correspond to unit 2, and so forth. The second column is the time variable. Rows 1 and 10 correspond to time 1, rows 2 and 11 correspond to time 2, and so forth. Similarly, the third column is the square of the time column and the fourth column is the cube.
+
+Now we take a look at `y1`. These are the outcomes. `y1[1]` corresponds to the outcome for unit 1 at time 1. `y1[2]` corresponds to the outcome for unit 1 at time 2, and so forth. The values of `y1` must correspond with the rows of `X1`. Therefore `X1` and `y1` should have the same length.
+
+```{r}
+print(head(y1,18))
+```
+
+## Estimating the model
+We now turn our attention toward estimating the model. We can do this by calling the `dualtrajMS` function. 
+
+```{r}
+iter = 5000
+thin = 1
+model = dualtrajMS(X1=X1, #data matrix Series 1
+                 X2=X2, #data matrix Series 2
+                 y1=y1, #outcomes Series 1
+                 y2=y2, #outcomes Series 2
+                 K1=K1, #number of groups Series 1
+                 K2=K2, #number of groups Series 2
+                 time_index=2, #column of X corresponding to time
+                 iterations=iter, #number of iterations
+                 thin=thin, #thinning
+                 dispIter=1000) #Print a message every 1000 iterations
+```
+First, let's clarify the model specification. `dualtrajMS` will sample the polynomial degree in the MCMC samples, rather than independently choose whether or not to include each covariate. For example, if 3 is sampled then we will estimate a cubic polynomial, if 2 is sampled then we will estimate a squared polynomial, and so forth. Users wishing to average over more complicated functions than polynomials, or to estimate models in which high order polynomials can be included even if a lower polynomial was selected out, will need make corresponding edits to the `dualtrajMS` function.
+
+Here we run the model for 5000 MCMC iterations. Setting the `thin` parameter to 1 tells us to keep every sample. We can set `thin=10`, for example, to only keep 1 out of every 10 samples. Thinning is not necessary unless your computer has memory limitations. We also set `dispIter=1000` to tell the program to send us a message every 1000 MCMC iterations. This will help us monitor the progress of the program.
+
+The only argument we have not touched on yet is `time_index`. This parameter specified which column of `X` corresponds to the time variable. If the data does not contain any covariates, this should be the second column of `X`. If, for example, we were using a dataset with additional covariates in columns 2 and 3, time in column 4, and time-squared in column 5, we would set `time_index=4`.
+
+## Analyzing the Model
+The model object contains the MCMC samples for each of the model's parameters. We can access the MCMC samples as follows, where each row represent an iteration of the MCMC:
+
+```{r}
+head(model$beta1[[1]]) #Series 1 group 1's coefficients
+head(model$beta1[[2]]) #Series 1 group 2's coefficients
+head(model$beta1[[3]]) #Series 1 group 3's coefficients
+head(model$sigma1) #Series 1 variance - NOT THE STANDARD DEVIATION
+model$c1[1:6,1:10] #Series 1 unit-level group memberships
+head(model$pi1) #Series 1  group-membership probabilities
+head(model$pi2) #Series 2  group-membership probabilities
+model$pi1_2[1,,] #Transition probabilities from Series 1 Group 1.
+model$pi12[1,,] #Joint probability of both Series group memberships
+```
+
+A conveniant way to summarize the posterior is with the `summary_dual_MS` function:
+
+```{r}
+burn = 0.9
+summary = summary_dual_MS(model,X1,X2,y1,y2,burn)
+```
+The `burn` parameter specifies the fraction of draws to keep. In this example, we keep the last 90% of MCMC samples. The first 10% are discarded as the burn-in period.
+
+We can now print out a posterior summary to obtain the posterior mean, standard deviation, and 95% credible interval, as follows:
+
+```{r}
+print(summary$estimates)
+```
+The notation for the transitions and joint probabilities requires some understanding. 1->2,i->j is $\Pr(c_{2}=j|c_{1}=i)$ and 2->1,i->j is $\Pr(c_{1}=j|c_{2}=i)$. The final columns $i,j$ denote the joint probabilities $\Pr(c_{1}=i \cap c_{2}=j)$.
+
+## MCMC samples for variables selected out of the model.
+The MCMC samples can be plotted to see how the variable selection works. In the example below, we see that all but about 5% of the draws for the cubic coefficient in Series 1 Group 3 are set ot zero, effectively selecting this parameter out of the model.
+```{r}
+plot(model$beta1[[3]][1000:5000,4],type='l')
+```
+
+## Checking for Label Switching and Local Modes
+One issue with GBTMs is the tendency for estimation routines to find a local mode which is not globally optimal. This is a problem for GBTMs estimated using maximum likelihood as well. To increase the probability that we are in a global optimum rather than a local optimum, we often run the Gibbs sampler using several seeds and print out the likelihood at the posterior mean:
+```{r}
+print(summary$log.likelihood)
+```
+We then use the seed which maximize the likelihood. This solution has no optimality guarantees, but we have found that we can often reach better optimas this way than other existing packages using maximum likelihood.
+
+The main drawback of the Bayesian approach is the tendency for label-switching and mode-switching. In the label-switching problem, the group labels switch in the middle of the algorithm. As a consequence, the group labeled "1" for the first 1000 draws may be labeled "2" in the second 1000 draws and vice versa. This would render and posterior summary of these coefficients meaningless. In our experience, label switching has not been a problem. However, switching between local-modes during the sampling process has occasionally been an issue.
+
+There is no consensus for the best way to deal with label and mode switching. Either problem can be easily observed by plotting the draws sequentially and checking for sudden and sustained breaks in the trend. For example, the plot below looks consistent throughout the post-burn-in samples:
+
+```{r}
+plot(model$beta1[[1]][1000:5000,1],type='l')
+```
+
+This indicates that neither label-switching nor mode-siwtching occured. 
+
+If we do observe a sudden break, there are multiple possible solutions. From our experience, we usually find that re-estimating the model using a different seed will solve the problem with least amount of effort.

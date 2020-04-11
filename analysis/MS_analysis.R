@@ -2,14 +2,11 @@ library(ggplot2)
 library(reshape2)
 library(BayesTraj)
 
-
+#The loop is for seraching for a seed which finds a global mode. Ignore unless redoing this search
 #for (i in 1:50){
 #print(i)
 #set.seed(i)
 set.seed(1)
-#set.seed(1) for 5
-#set.seed(2) for 6
-#set.seed(7) for 7
 
 #Son data
 son_jtm = read.csv("C:/Users/jtm50/Dropbox/Emma and Justin's Secret Folder/DualTrajectory/Data/offspring_f.csv")
@@ -43,9 +40,6 @@ X_father = cbind(X_father,X_father[,2]^2,X_father[,2]^3)
 rm(father_jtm)
 
 iter=25000
-#K = 3, -22451
-#K = 4, -20682
-#K = 5, -19676
 K = 5
 K1 = K
 K2 = K
@@ -64,13 +58,14 @@ model = dualtrajMS(X1=X_father,
 burn = 0.8
 summary = summary_dual_MS(model,X_father,X_son,Y_father,Y_son,burn)
 print(summary$estimates)
-#print(summary$log.likelihood)
+print(summary$log.likelihood)
 print(summary$BIC)
 },error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
 #}
 
 n1 = dim(model$c1)[1]
 
+#function for putting multiple plots in one image
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   library(grid)
   
@@ -107,6 +102,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }
 
+#posterior predictive distributions for plotting trajectories
 sampleTraj = function(beta,bounds,poly,log=FALSE,div=FALSE) {
   #generate covariates for each time period
   cov = rep(1,(bounds[2]-bounds[1]+1))
@@ -128,10 +124,11 @@ sampleTraj = function(beta,bounds,poly,log=FALSE,div=FALSE) {
   return(yTraj)
 }
 
+#get trajectory samples
 yTraj1 = sampleTraj(model$beta1,bounds=c(0,30),poly=3,log=FALSE,div=FALSE)
 yTraj2 = sampleTraj(model$beta2,bounds=c(0,30),poly=3,log=FALSE,div=FALSE)
 
-
+#function to plot the trajectories
 trajPlot = function(yTraj,bounds,title) {
   order = order(unlist(lapply(yTraj,mean)))
   print(length(order))
@@ -167,10 +164,12 @@ trajPlot = function(yTraj,bounds,title) {
   p
 }
 
+#combine plots
 multiplot(trajPlot(yTraj1,c(0,30),'Father Trajectories'),
           trajPlot(yTraj2,c(0,30),'Son Trajectories'),
           cols=2)
 
+#group membership plots
 multiDensity = function(x) {
   data =  melt(as.data.frame(x))
   ggplot(data,aes(x=value, fill=variable)) + geom_density(alpha=0.25)
@@ -178,7 +177,7 @@ multiDensity = function(x) {
 multiDensity(tail(model$pi1,n1*burn))
 multiDensity(tail(model$pi2,n1*burn))
 
-
+#joint distribution plots
 joint_dist_plot = function(pi1,pi2,pi12) {
   df1 = as.data.frame(tail(pi1,n1*burn))
   names(df1) = c('pi1_1','pi1_2','pi1_3','pi1_4','pi1_5')
@@ -244,6 +243,7 @@ joint_dist_plot = function(pi1,pi2,pi12) {
 
 joint_dist_plot(model$pi1,model$pi2,model$pi12)
 
+#transition probabilit plots
 trans_plot = function(pi) {
   df1_2 = aperm(pi[(n1*(1-burn)+1):n1,,],c(1,3,2))
   dim(df1_2) = c(n1*burn,K1*K2)
@@ -293,7 +293,7 @@ trans_plot(model$pi2_1)
 par(mfrow = c(3,1))
 
 #trace plots to show convergence
-plot(model$beta2[[2]][0:1000,4],ylab='Coefficient',xlab='MCMC Iteration',main='Cubic Coefficients Traceplot')
+plot(model$beta2[[2]][0:1000,4],type='l',ylab='Coefficient',xlab='MCMC Iteration',main='Cubic Coefficients Traceplot')
 
 age = cbind(model$beta2[[1]][,2],model$beta1[[2]][,2],model$beta1[[3]][,2])
 
@@ -332,24 +332,3 @@ age3 = cbind(model$beta2[[1]][,4],model$beta1[[2]][,4],model$beta1[[3]][,4])
 matplot(c(1:iter), age3, type='l', xlab='Iteration', ylab='Age Coefficient', col=1:3)
 legend('bottomright', inset=.05, legend=c(1,2,3), 
        pch=1, horiz=TRUE, col=1:3)
-
-cov = cbind(rep(1,31),(0:30),(0:30)^2)
-trajT = seq(0,30)
-for (i in 1:5) {
-  predictiveDistribution = cov %*% t(tail(model$beta1[[i]],5000))
-  predictiveIntervals = t(apply(predictiveDistribution,1,quantile,probs=c(0.025,0.5,0.975)))
-  colnames(predictiveIntervals) = c("L95","Est","U95")
-  colnames(predictiveIntervals) = paste(colnames(predictiveIntervals), i, sep = "")
-  trajT = cbind(trajT,predictiveIntervals)
-}
-write.csv(trajT, file = "C:/Users/Justin1/Dropbox/Emma and Justin's Secret Folder/father.csv", row.names = TRUE)
-
-trajT = seq(0,30)
-for (i in 1:5) {
-  predictiveDistribution = cov %*% t(tail(model$beta2[[i]],5000))
-  predictiveIntervals = t(apply(predictiveDistribution,1,quantile,probs=c(0.025,0.5,0.975)))
-  colnames(predictiveIntervals) = c("L95","Est","U95")
-  colnames(predictiveIntervals) = paste(colnames(predictiveIntervals), i, sep = "")
-  trajT = cbind(trajT,predictiveIntervals)
-}
-write.csv(trajT, file = "C:/Users/Justin1/Dropbox/Emma and Justin's Secret Folder/son.csv", row.names = TRUE)

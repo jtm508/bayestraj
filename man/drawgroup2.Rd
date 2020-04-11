@@ -15,7 +15,7 @@ drawgroup2(X, y, N, id, g1, pi1, pi1_2, beta, sigma, K)
 
 \item{id:}{Vector, tandem for each row of X and Y}
 
-\item{g2:}{Vector, group membership for series 2}
+\item{g1:}{Vector, group membership for series 1}
 
 \item{pi1:}{Vector, group probabilities for series 1}
 

@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Bayesian Dual GBTM</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Bayesian Dual GBTM</h1>
+
+
+
+<p>In this vignette we will demonstrate how to use BayesTraj to use Bayesian Model Averaging to estimate a Bayesian Dual GBTM with normal likelihoods. We will use simulated data in order to verify that the estimation routine can select the correct functional forms, recover the true parameters, and to demonstrate how the data should be formatted before calling the estimation routines.</p>
+<p>Begin by loading the BayesTraj library:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(BayesTraj)</code></pre></div>
+<div id="simulating-data" class="section level2">
+<h2>Simulating Data</h2>
+<p>First, we will simulate data. This will not be necessary in your own projects, but it is useful both for testing the package and for using as a template for formatting your own datasets.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">N=<span class="dv">1000</span> <span class="co">#number of units</span>
+T1=<span class="dv">9</span> <span class="co">#Time periods for Group 1</span>
+T2=<span class="dv">9</span> <span class="co">#Time periods for Group 2</span>
+pi1=<span class="kw">c</span>(<span class="fl">0.5</span>,<span class="fl">0.2</span>,<span class="fl">0.3</span>) <span class="co">#Group 1 membership probabilities</span>
+<span class="co">#Transition Matrix</span>
+pi1_<span class="dv">2</span>=<span class="kw">matrix</span>(<span class="kw">c</span>(<span class="fl">0.3</span>,<span class="fl">0.3</span>,<span class="fl">0.4</span>,
+               <span class="fl">0.2</span>,<span class="fl">0.5</span>,<span class="fl">0.3</span>,
+               <span class="fl">0.7</span>,<span class="fl">0.2</span>,<span class="fl">0.1</span>),
+             <span class="dt">nrow=</span><span class="dv">3</span>,<span class="dt">ncol=</span><span class="dv">3</span>,<span class="dt">byrow=</span><span class="ot">TRUE</span>)
+K1 =<span class="st"> </span><span class="kw">length</span>(pi1) <span class="co">#Number of groups in series 1</span>
+K2 =<span class="st"> </span><span class="kw">dim</span>(pi1_<span class="dv">2</span>)[<span class="dv">2</span>] <span class="co">#Number of groups in series 2</span>
+<span class="co">#Coefficients for Series 1</span>
+beta1=<span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">100</span>,<span class="dv">10</span>,<span class="op">-</span><span class="fl">0.5</span>,<span class="fl">0.1</span>,
+               <span class="dv">80</span>,<span class="op">-</span><span class="dv">1</span>,<span class="fl">0.5</span>,<span class="dv">0</span>,
+               <span class="dv">120</span>,<span class="dv">20</span>,<span class="op">-</span><span class="dv">2</span>,<span class="dv">0</span>),<span class="dt">nrow=</span><span class="dv">3</span>,<span class="dt">ncol=</span><span class="dv">4</span>,<span class="dt">byrow=</span><span class="ot">TRUE</span>)
+<span class="co">#Coefficients for Series 2</span>
+beta2=<span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">90</span>,<span class="fl">0.4</span>,<span class="dv">0</span>,<span class="dv">0</span>,
+               <span class="dv">50</span>,<span class="dv">1</span>,<span class="op">-</span><span class="fl">0.5</span>,<span class="dv">0</span>,
+               <span class="dv">100</span>,<span class="op">-</span><span class="dv">30</span>,<span class="dv">3</span>,<span class="op">-</span><span class="fl">0.3</span>),<span class="dt">nrow=</span><span class="dv">3</span>,<span class="dt">ncol=</span><span class="dv">4</span>,<span class="dt">byrow=</span><span class="ot">TRUE</span>)
+sigma1=<span class="dv">16</span> <span class="co">#standard deviation of Series 1 outcomes</span>
+sigma2=<span class="dv">36</span> <span class="co">#standard deviation of Series 2 outcomes</span>
+
+<span class="kw">set.seed</span>(<span class="dv">1</span>)
+data =<span class="st"> </span><span class="kw">gen_data_dual</span>(<span class="dt">N=</span>N,
+                <span class="dt">T1=</span>T1,
+                <span class="dt">T2=</span>T2,
+                <span class="dt">pi1=</span>pi1,
+                <span class="dt">pi2=</span>pi1_<span class="dv">2</span>,
+                <span class="dt">beta1=</span>beta1,
+                <span class="dt">beta2=</span>beta2,
+                <span class="dt">sigma1=</span>sigma1,
+                <span class="dt">sigma2=</span>sigma2,
+                <span class="dt">poly =</span> <span class="dv">3</span>) <span class="co">#degree of polynomial</span></code></pre></div>
+<p>In this example we have simulated data for 1000 paired-units with 9 time periods each, for a total of 18000 observations. While we have set each unit to have observations in 9 time periods, the estmation function below allows for the number of observations to vary. We have chosen the Group 1 membership probabilities to be 50%, 20%, and 30%. <code>pi1_2</code> is the transition matrix. <code>pi1_2[i,j]</code> represents the probability that the second pair member is in Group j conditional on the first pair member being in Group i. From this, the <code>gen_data_dual</code> function can infer that there should be three groups for both series.</p>
+<p>Each row of the <code>beta</code> matrices defines the trajectory coefficients for the respective groups. For example, the expected value at time <span class="math inline">\(t\)</span> in Series 1 Group 1 is <span class="math inline">\(100+10t-0.5t^2 + 0.1t^3\)</span>. Sigma1 and sigma2 define the standard deviation of the outcomes.</p>
+<p>When calling the <code>gen_data_dual</code> function, we also specify <code>poly=2</code> in order to tell model to use a second-degree polynomial for time. If there are more non-intercept columns of <code>beta</code> than <code>poly</code>, <code>gen_data_dual</code> will generate random covariates corresponding to the remaining columns. In general, the last <code>poly</code> columns of the <code>beta</code> matrices correspond to the polynomial coefficients.</p>
+<p>Please note that we have selected <code>beta</code> coefficients corresponding to various polynomial degress. Of the six groups in the data, 3 have third-degree polynomials, two have second-degree polynomials, and one has a first-degree polynomial.</p>
+<p>Now let’s take a look at the generated data. We can unpack the individual attributes from the data object.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">X1=data<span class="op">$</span>X1
+X2=data<span class="op">$</span>X2
+y1=data<span class="op">$</span>Y1
+y2=data<span class="op">$</span>Y2</code></pre></div>
+<p>While we will restrict our discussion to the first series, everything applies to the second series as well. The first 18 rows of <code>X1</code> are:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">head</span>(X1,<span class="dv">18</span>))
+<span class="co">#&gt;       [,1] [,2] [,3] [,4]</span>
+<span class="co">#&gt;  [1,]    1    1    1    1</span>
+<span class="co">#&gt;  [2,]    1    2    4    8</span>
+<span class="co">#&gt;  [3,]    1    3    9   27</span>
+<span class="co">#&gt;  [4,]    1    4   16   64</span>
+<span class="co">#&gt;  [5,]    1    5   25  125</span>
+<span class="co">#&gt;  [6,]    1    6   36  216</span>
+<span class="co">#&gt;  [7,]    1    7   49  343</span>
+<span class="co">#&gt;  [8,]    1    8   64  512</span>
+<span class="co">#&gt;  [9,]    1    9   81  729</span>
+<span class="co">#&gt; [10,]    2    1    1    1</span>
+<span class="co">#&gt; [11,]    2    2    4    8</span>
+<span class="co">#&gt; [12,]    2    3    9   27</span>
+<span class="co">#&gt; [13,]    2    4   16   64</span>
+<span class="co">#&gt; [14,]    2    5   25  125</span>
+<span class="co">#&gt; [15,]    2    6   36  216</span>
+<span class="co">#&gt; [16,]    2    7   49  343</span>
+<span class="co">#&gt; [17,]    2    8   64  512</span>
+<span class="co">#&gt; [18,]    2    9   81  729</span></code></pre></div>
+<p>The first column identifies the unit. For example, the first 9 rows correspond to unit 1, the second 9 rows correspond to unit 2, and so forth. The second column is the time variable. Rows 1 and 10 correspond to time 1, rows 2 and 11 correspond to time 2, and so forth. Similarly, the third column is the square of the time column and the fourth column is the cube.</p>
+<p>Now we take a look at <code>y1</code>. These are the outcomes. <code>y1[1]</code> corresponds to the outcome for unit 1 at time 1. <code>y1[2]</code> corresponds to the outcome for unit 1 at time 2, and so forth. The values of <code>y1</code> must correspond with the rows of <code>X1</code>. Therefore <code>X1</code> and <code>y1</code> should have the same length.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">head</span>(y1,<span class="dv">18</span>))
+<span class="co">#&gt;  [1] 114.1399 123.2477 124.7169 139.2429 150.2776 156.9494 183.0434</span>
+<span class="co">#&gt;  [8] 191.5506 217.4130 113.5926 116.6365 127.3345 131.9123 144.1961</span>
+<span class="co">#&gt; [15] 165.0036 179.1018 196.8343 217.0639</span></code></pre></div>
+</div>
+<div id="estimating-the-model" class="section level2">
+<h2>Estimating the model</h2>
+<p>We now turn our attention toward estimating the model. We can do this by calling the <code>dualtrajMS</code> function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">iter =<span class="st"> </span><span class="dv">5000</span>
+thin =<span class="st"> </span><span class="dv">1</span>
+model =<span class="st"> </span><span class="kw">dualtrajMS</span>(<span class="dt">X1=</span>X1, <span class="co">#data matrix Series 1</span>
+                 <span class="dt">X2=</span>X2, <span class="co">#data matrix Series 2</span>
+                 <span class="dt">y1=</span>y1, <span class="co">#outcomes Series 1</span>
+                 <span class="dt">y2=</span>y2, <span class="co">#outcomes Series 2</span>
+                 <span class="dt">K1=</span>K1, <span class="co">#number of groups Series 1</span>
+                 <span class="dt">K2=</span>K2, <span class="co">#number of groups Series 2</span>
+                 <span class="dt">time_index=</span><span class="dv">2</span>, <span class="co">#column of X corresponding to time</span>
+                 <span class="dt">iterations=</span>iter, <span class="co">#number of iterations</span>
+                 <span class="dt">thin=</span>thin, <span class="co">#thinning</span>
+                 <span class="dt">dispIter=</span><span class="dv">1000</span>) <span class="co">#Print a message every 1000 iterations</span>
+<span class="co">#&gt; [1] 1000</span>
+<span class="co">#&gt; [1] 2000</span>
+<span class="co">#&gt; [1] 3000</span>
+<span class="co">#&gt; [1] 4000</span>
+<span class="co">#&gt; [1] 5000</span></code></pre></div>
+<p>First, let’s clarify the model specification. <code>dualtrajMS</code> will sample the polynomial degree in the MCMC samples, rather than independently choose whether or not to include each covariate. For example, if 3 is sampled then we will estimate a cubic polynomial, if 2 is sampled then we will estimate a squared polynomial, and so forth. Users wishing to average over more complicated functions than polynomials, or to estimate models in which high order polynomials can be included even if a lower polynomial was selected out, will need make corresponding edits to the <code>dualtrajMS</code> function.</p>
+<p>Here we run the model for 5000 MCMC iterations. Setting the <code>thin</code> parameter to 1 tells us to keep every sample. We can set <code>thin=10</code>, for example, to only keep 1 out of every 10 samples. Thinning is not necessary unless your computer has memory limitations. We also set <code>dispIter=1000</code> to tell the program to send us a message every 1000 MCMC iterations. This will help us monitor the progress of the program.</p>
+<p>The only argument we have not touched on yet is <code>time_index</code>. This parameter specified which column of <code>X</code> corresponds to the time variable. If the data does not contain any covariates, this should be the second column of <code>X</code>. If, for example, we were using a dataset with additional covariates in columns 2 and 3, time in column 4, and time-squared in column 5, we would set <code>time_index=4</code>.</p>
+</div>
+<div id="analyzing-the-model" class="section level2">
+<h2>Analyzing the Model</h2>
+<p>The model object contains the MCMC samples for each of the model’s parameters. We can access the MCMC samples as follows, where each row represent an iteration of the MCMC:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(model<span class="op">$</span>beta1[[<span class="dv">1</span>]]) <span class="co">#Series 1 group 1's coefficients</span>
+<span class="co">#&gt;           [,1]      [,2]       [,3]      [,4]</span>
+<span class="co">#&gt; [1,] 105.56339  7.755373  0.0000000 0.0000000</span>
+<span class="co">#&gt; [2,] 106.50248  8.186797  0.0000000 0.0000000</span>
+<span class="co">#&gt; [3,] 111.02443  9.144762  0.0000000 0.0000000</span>
+<span class="co">#&gt; [4,]  99.92845 14.638564 -1.3810026 0.1205504</span>
+<span class="co">#&gt; [5,]  99.95446 10.058606 -0.5239753 0.1020357</span>
+<span class="co">#&gt; [6,]  99.91526 10.162504 -0.5468373 0.1033624</span>
+<span class="kw">head</span>(model<span class="op">$</span>beta1[[<span class="dv">2</span>]]) <span class="co">#Series 1 group 2's coefficients</span>
+<span class="co">#&gt;          [,1]      [,2]       [,3] [,4]</span>
+<span class="co">#&gt; [1,] 102.5045  8.071105  0.0000000    0</span>
+<span class="co">#&gt; [2,] 103.5695  8.051928  0.0000000    0</span>
+<span class="co">#&gt; [3,] 114.5299  8.371167  0.0000000    0</span>
+<span class="co">#&gt; [4,] 113.4299 13.089365 -0.6768584    0</span>
+<span class="co">#&gt; [5,] 120.1869 19.831635 -1.9805797    0</span>
+<span class="co">#&gt; [6,] 119.8036 20.135981 -2.0157279    0</span>
+<span class="kw">head</span>(model<span class="op">$</span>beta1[[<span class="dv">3</span>]]) <span class="co">#Series 1 group 3's coefficients</span>
+<span class="co">#&gt;           [,1]       [,2]       [,3] [,4]</span>
+<span class="co">#&gt; [1,] 103.09077  8.4253057 -0.0614617    0</span>
+<span class="co">#&gt; [2,] 102.87467  6.1443306  0.0000000    0</span>
+<span class="co">#&gt; [3,]  85.38751 -0.5091793  0.4540651    0</span>
+<span class="co">#&gt; [4,]  79.80471 -1.1125931  0.5202069    0</span>
+<span class="co">#&gt; [5,]  79.64531 -1.0812855  0.5236552    0</span>
+<span class="co">#&gt; [6,]  79.72681 -1.0606995  0.5147198    0</span>
+<span class="kw">head</span>(model<span class="op">$</span>sigma1) <span class="co">#Series 1 variance - NOT THE STANDARD DEVIATION</span>
+<span class="co">#&gt;           [,1]       [,2]       [,3]</span>
+<span class="co">#&gt; [1,] 992.79938 1001.40668 1084.06381</span>
+<span class="co">#&gt; [2,] 855.07114 1003.53018 1335.46090</span>
+<span class="co">#&gt; [3,] 378.13753  425.15170  428.80401</span>
+<span class="co">#&gt; [4,] 247.00031  417.48545   16.12653</span>
+<span class="co">#&gt; [5,]  16.15578   21.28314   16.69968</span>
+<span class="co">#&gt; [6,]  16.63348   16.77541   15.64830</span>
+model<span class="op">$</span>c1[<span class="dv">1</span><span class="op">:</span><span class="dv">6</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>] <span class="co">#Series 1 unit-level group memberships</span>
+<span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span>
+<span class="co">#&gt; [1,]    2    2    3    2    2    3    1    2    2     2</span>
+<span class="co">#&gt; [2,]    2    2    2    3    2    3    2    2    2     2</span>
+<span class="co">#&gt; [3,]    1    1    2    3    1    3    3    1    2     1</span>
+<span class="co">#&gt; [4,]    2    1    2    3    1    3    3    2    2     2</span>
+<span class="co">#&gt; [5,]    1    1    2    3    1    3    3    2    2     1</span>
+<span class="co">#&gt; [6,]    1    1    2    3    1    3    3    2    2     1</span>
+<span class="kw">head</span>(model<span class="op">$</span>pi1) <span class="co">#Series 1  group-membership probabilities</span>
+<span class="co">#&gt;           [,1]      [,2]      [,3]</span>
+<span class="co">#&gt; [1,] 0.3461449 0.4855474 0.1683076</span>
+<span class="co">#&gt; [2,] 0.3536529 0.4929497 0.1533974</span>
+<span class="co">#&gt; [3,] 0.4071274 0.3555797 0.2372929</span>
+<span class="co">#&gt; [4,] 0.4220945 0.3924430 0.1854625</span>
+<span class="co">#&gt; [5,] 0.5383237 0.2755262 0.1861502</span>
+<span class="co">#&gt; [6,] 0.5262326 0.2949097 0.1788576</span>
+<span class="kw">head</span>(model<span class="op">$</span>pi2) <span class="co">#Series 2  group-membership probabilities</span>
+<span class="co">#&gt;             [,1]      [,2]      [,3]</span>
+<span class="co">#&gt; [1,] 0.492469476 0.1499625 0.3575681</span>
+<span class="co">#&gt; [2,] 0.503553683 0.1352396 0.3612067</span>
+<span class="co">#&gt; [3,] 0.290409966 0.1122119 0.5973781</span>
+<span class="co">#&gt; [4,] 0.008133891 0.3000159 0.6918502</span>
+<span class="co">#&gt; [5,] 0.304073537 0.3125256 0.3834009</span>
+<span class="co">#&gt; [6,] 0.327765409 0.2865403 0.3856943</span>
+model<span class="op">$</span>pi1_<span class="dv">2</span>[<span class="dv">1</span>,,] <span class="co">#Transition probabilities from Series 1 Group 1.</span>
+<span class="co">#&gt;           [,1]        [,2]       [,3]</span>
+<span class="co">#&gt; [1,] 0.3300167 0.008194046 0.66178925</span>
+<span class="co">#&gt; [2,] 0.7290138 0.181563670 0.08942251</span>
+<span class="co">#&gt; [3,] 0.1441710 0.350360607 0.50546842</span>
+model<span class="op">$</span>pi12[<span class="dv">1</span>,,] <span class="co">#Joint probability of both Series group memberships</span>
+<span class="co">#&gt;            [,1]        [,2]       [,3]</span>
+<span class="co">#&gt; [1,] 0.11423360 0.002836327 0.22907498</span>
+<span class="co">#&gt; [2,] 0.35397080 0.088157776 0.04341887</span>
+<span class="co">#&gt; [3,] 0.02426508 0.058968368 0.08507420</span></code></pre></div>
+<p>A conveniant way to summarize the posterior is with the <code>summary_dual_MS</code> function:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">burn =<span class="st"> </span><span class="fl">0.9</span>
+summary =<span class="st"> </span><span class="kw">summary_dual_MS</span>(model,X1,X2,y1,y2,burn)</code></pre></div>
+<p>The <code>burn</code> parameter specifies the fraction of draws to keep. In this example, we keep the last 90% of MCMC samples. The first 10% are discarded as the burn-in period.</p>
+<p>We can now print out a posterior summary to obtain the posterior mean, standard deviation, and 95% credible interval, as follows:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(summary<span class="op">$</span>estimates)
+<span class="co">#&gt;                 Estimate Standard Deviation          2.5%         50%</span>
+<span class="co">#&gt; beta1_1[1]  9.993229e+01       0.3849188074  99.186655738  99.9382766</span>
+<span class="co">#&gt; beta1_1[2]  1.003222e+01       0.3136473976   9.423656938  10.0260182</span>
+<span class="co">#&gt; beta1_1[3] -5.079515e-01       0.0708615726  -0.647367984  -0.5073678</span>
+<span class="co">#&gt; beta1_1[4]  1.007345e-01       0.0046756956   0.091769012   0.1006844</span>
+<span class="co">#&gt; sigma1_1    4.038240e+00       0.0422121607   3.954711949   4.0377701</span>
+<span class="co">#&gt; beta1_2[1]  1.198396e+02       0.3181681290 119.212895946 119.8387246</span>
+<span class="co">#&gt; beta1_2[2]  2.006374e+01       0.1543118623  19.751102681  20.0670543</span>
+<span class="co">#&gt; beta1_2[3] -2.005846e+00       0.0194428061  -2.035115692  -2.0066300</span>
+<span class="co">#&gt; beta1_2[4] -4.937830e-05       0.0008989989   0.000000000   0.0000000</span>
+<span class="co">#&gt; sigma1_2    4.082878e+00       0.0579422375   3.973887961   4.0816279</span>
+<span class="co">#&gt; beta1_3[1]  7.974191e+01       0.3938774162  79.033186396  79.7280328</span>
+<span class="co">#&gt; beta1_3[2] -1.058160e+00       0.2316240301  -1.548475016  -1.0364262</span>
+<span class="co">#&gt; beta1_3[3]  5.176239e-01       0.0415415170   0.478403158   0.5118625</span>
+<span class="co">#&gt; beta1_3[4] -4.250873e-04       0.0025402693  -0.008746408   0.0000000</span>
+<span class="co">#&gt; sigma1_3    3.977847e+00       0.0666261471   3.848889668   3.9766650</span>
+<span class="co">#&gt; pi1[1]      5.191275e+01       1.5808346741  48.736589700  51.9199888</span>
+<span class="co">#&gt; pi1[2]      2.824179e+01       1.4134860192  25.524880807  28.2388691</span>
+<span class="co">#&gt; pi1[3]      1.984546e+01       1.2512353815  17.491982053  19.8204426</span>
+<span class="co">#&gt; beta2_1[1]  4.924984e+01       0.4639150933  48.406663599  49.2350201</span>
+<span class="co">#&gt; beta2_1[2]  1.406983e+00       0.2575625638   0.931772597   1.4244367</span>
+<span class="co">#&gt; beta2_1[3] -5.377047e-01       0.0439341407  -0.580819018  -0.5428144</span>
+<span class="co">#&gt; beta2_1[4] -3.735729e-04       0.0026235051  -0.004331308   0.0000000</span>
+<span class="co">#&gt; sigma2_1    5.923119e+00       0.0798612827   5.761952858   5.9236856</span>
+<span class="co">#&gt; beta2_2[1]  9.955316e+01       0.7457653550  98.049968230  99.5555515</span>
+<span class="co">#&gt; beta2_2[2] -2.991691e+01       0.6154421017 -31.125834531 -29.9236260</span>
+<span class="co">#&gt; beta2_2[3]  3.050123e+00       0.1391346883   2.774152605   3.0512312</span>
+<span class="co">#&gt; beta2_2[4] -3.066100e-01       0.0091447660  -0.324399527  -0.3066759</span>
+<span class="co">#&gt; sigma2_2    5.955801e+00       0.0811040939   5.800948050   5.9555145</span>
+<span class="co">#&gt; beta2_3[1]  8.993266e+01       0.2291611808  89.504879087  89.9279549</span>
+<span class="co">#&gt; beta2_3[2]  3.949163e-01       0.0587923482   0.303877663   0.3993582</span>
+<span class="co">#&gt; beta2_3[3]  4.912008e-04       0.0059825562   0.000000000   0.0000000</span>
+<span class="co">#&gt; beta2_3[4] -1.717224e-06       0.0002978377   0.000000000   0.0000000</span>
+<span class="co">#&gt; sigma2_3    5.933092e+00       0.0695942401   5.801221320   5.9322400</span>
+<span class="co">#&gt; pi2[1]      3.091413e+01       1.4717898636  28.091235960  30.9295710</span>
+<span class="co">#&gt; pi2[2]      3.033974e+01       1.4602270800  27.474969183  30.3422094</span>
+<span class="co">#&gt; pi2[3]      3.874613e+01       1.5413331487  35.826250585  38.7333135</span>
+<span class="co">#&gt; 1-&gt;2,1-&gt;1   2.719338e+01       1.9243582145  23.522164757  27.1677361</span>
+<span class="co">#&gt; 1-&gt;2,1-&gt;2   4.240965e+01       2.1707437686  38.136891539  42.4000042</span>
+<span class="co">#&gt; 1-&gt;2,1-&gt;3   3.039698e+01       2.0335872268  26.538216801  30.3824593</span>
+<span class="co">#&gt; 1-&gt;2,2-&gt;1   1.997762e+01       2.3738642145  15.636829426  19.8790751</span>
+<span class="co">#&gt; 1-&gt;2,2-&gt;2   1.264244e+01       1.9735464318   9.130860065  12.5456241</span>
+<span class="co">#&gt; 1-&gt;2,2-&gt;3   6.737994e+01       2.7672304715  61.904813286  67.4734118</span>
+<span class="co">#&gt; 1-&gt;2,3-&gt;1   5.621397e+01       3.4833433041  49.290876457  56.2322322</span>
+<span class="co">#&gt; 1-&gt;2,3-&gt;2   2.394348e+01       3.0249683860  18.295823338  23.8416521</span>
+<span class="co">#&gt; 1-&gt;2,3-&gt;3   1.984255e+01       2.7906553295  14.581361741  19.7529917</span>
+<span class="co">#&gt; 2-&gt;1,1-&gt;1   4.566555e+01       2.7976550846  40.100679802  45.6919049</span>
+<span class="co">#&gt; 2-&gt;1,1-&gt;2   1.824625e+01       2.1570322163  14.358828574  18.1626955</span>
+<span class="co">#&gt; 2-&gt;1,1-&gt;3   3.608821e+01       2.7070820264  30.958915848  36.0259931</span>
+<span class="co">#&gt; 2-&gt;1,2-&gt;1   7.256638e+01       2.5811321597  67.370024560  72.6258559</span>
+<span class="co">#&gt; 2-&gt;1,2-&gt;2   1.176939e+01       1.8534110016   8.478420249  11.6723898</span>
+<span class="co">#&gt; 2-&gt;1,2-&gt;3   1.566423e+01       2.0958387407  11.753999614  15.5872955</span>
+<span class="co">#&gt; 2-&gt;1,3-&gt;1   4.072545e+01       2.5027981897  35.953477676  40.6833080</span>
+<span class="co">#&gt; 2-&gt;1,3-&gt;2   4.911311e+01       2.5121061952  44.139623225  49.1215724</span>
+<span class="co">#&gt; 2-&gt;1,3-&gt;3   1.016144e+01       1.5036577308   7.379188655  10.0839840</span>
+<span class="co">#&gt; 1,1         1.411653e+01       1.0840498783  12.001274281  14.1091614</span>
+<span class="co">#&gt; 1,2         2.201617e+01       1.3168395382  19.506445305  22.0053546</span>
+<span class="co">#&gt; 1,3         1.577965e+01       1.1592859217  13.601344720  15.7540672</span>
+<span class="co">#&gt; 2,1         5.641490e+00       0.7261760456   4.359874672   5.6046752</span>
+<span class="co">#&gt; 2,2         3.570922e+00       0.5900868463   2.523344538   3.5418983</span>
+<span class="co">#&gt; 2,3         1.902926e+01       1.2331017036  16.631013304  19.0121864</span>
+<span class="co">#&gt; 3,1         1.115664e+01       0.9917151970   9.301033627  11.1231875</span>
+<span class="co">#&gt; 3,2         4.752357e+00       0.6765817212   3.528740571   4.7255372</span>
+<span class="co">#&gt; 3,3         3.936986e+00       0.6028858106   2.832030284   3.8995216</span>
+<span class="co">#&gt;                    97.5% Inclusion Prob.</span>
+<span class="co">#&gt; beta1_1[1]  1.006930e+02          1.0000</span>
+<span class="co">#&gt; beta1_1[2]  1.064579e+01          1.0000</span>
+<span class="co">#&gt; beta1_1[3] -3.721845e-01          0.9994</span>
+<span class="co">#&gt; beta1_1[4]  1.100415e-01          0.9994</span>
+<span class="co">#&gt; sigma1_1    4.121489e+00              NA</span>
+<span class="co">#&gt; beta1_2[1]  1.204839e+02          1.0000</span>
+<span class="co">#&gt; beta1_2[2]  2.035241e+01          1.0000</span>
+<span class="co">#&gt; beta1_2[3] -1.974639e+00          0.9994</span>
+<span class="co">#&gt; beta1_2[4]  0.000000e+00          0.0222</span>
+<span class="co">#&gt; sigma1_2    4.197962e+00              NA</span>
+<span class="co">#&gt; beta1_3[1]  8.054309e+01          1.0000</span>
+<span class="co">#&gt; beta1_3[2] -7.093075e-01          1.0000</span>
+<span class="co">#&gt; beta1_3[3]  6.417338e-01          0.9998</span>
+<span class="co">#&gt; beta1_3[4]  0.000000e+00          0.0474</span>
+<span class="co">#&gt; sigma1_3    4.110034e+00              NA</span>
+<span class="co">#&gt; pi1[1]      5.502025e+01              NA</span>
+<span class="co">#&gt; pi1[2]      3.100684e+01              NA</span>
+<span class="co">#&gt; pi1[3]      2.240092e+01              NA</span>
+<span class="co">#&gt; beta2_1[1]  5.017672e+01          1.0000</span>
+<span class="co">#&gt; beta2_1[2]  1.813398e+00          1.0000</span>
+<span class="co">#&gt; beta2_1[3] -4.762394e-01          1.0000</span>
+<span class="co">#&gt; beta2_1[4]  0.000000e+00          0.0356</span>
+<span class="co">#&gt; sigma2_1    6.076935e+00              NA</span>
+<span class="co">#&gt; beta2_2[1]  1.010091e+02          1.0000</span>
+<span class="co">#&gt; beta2_2[2] -2.869771e+01          1.0000</span>
+<span class="co">#&gt; beta2_2[3]  3.317657e+00          1.0000</span>
+<span class="co">#&gt; beta2_2[4] -2.881500e-01          0.9996</span>
+<span class="co">#&gt; sigma2_2    6.121289e+00              NA</span>
+<span class="co">#&gt; beta2_3[1]  9.038732e+01          1.0000</span>
+<span class="co">#&gt; beta2_3[2]  4.744573e-01          1.0000</span>
+<span class="co">#&gt; beta2_3[3]  2.253819e-04          0.0296</span>
+<span class="co">#&gt; beta2_3[4]  0.000000e+00          0.0008</span>
+<span class="co">#&gt; sigma2_3    6.069870e+00              NA</span>
+<span class="co">#&gt; pi2[1]      3.376711e+01              NA</span>
+<span class="co">#&gt; pi2[2]      3.329302e+01              NA</span>
+<span class="co">#&gt; pi2[3]      4.184821e+01              NA</span>
+<span class="co">#&gt; 1-&gt;2,1-&gt;1   3.109538e+01              NA</span>
+<span class="co">#&gt; 1-&gt;2,1-&gt;2   4.658389e+01              NA</span>
+<span class="co">#&gt; 1-&gt;2,1-&gt;3   3.444202e+01              NA</span>
+<span class="co">#&gt; 1-&gt;2,2-&gt;1   2.474966e+01              NA</span>
+<span class="co">#&gt; 1-&gt;2,2-&gt;2   1.687495e+01              NA</span>
+<span class="co">#&gt; 1-&gt;2,2-&gt;3   7.256067e+01              NA</span>
+<span class="co">#&gt; 1-&gt;2,3-&gt;1   6.286873e+01              NA</span>
+<span class="co">#&gt; 1-&gt;2,3-&gt;2   3.029508e+01              NA</span>
+<span class="co">#&gt; 1-&gt;2,3-&gt;3   2.557834e+01              NA</span>
+<span class="co">#&gt; 2-&gt;1,1-&gt;1   5.110973e+01              NA</span>
+<span class="co">#&gt; 2-&gt;1,1-&gt;2   2.279810e+01              NA</span>
+<span class="co">#&gt; 2-&gt;1,1-&gt;3   4.159844e+01              NA</span>
+<span class="co">#&gt; 2-&gt;1,2-&gt;1   7.738673e+01              NA</span>
+<span class="co">#&gt; 2-&gt;1,2-&gt;2   1.572901e+01              NA</span>
+<span class="co">#&gt; 2-&gt;1,2-&gt;3   2.010423e+01              NA</span>
+<span class="co">#&gt; 2-&gt;1,3-&gt;1   4.574489e+01              NA</span>
+<span class="co">#&gt; 2-&gt;1,3-&gt;2   5.401148e+01              NA</span>
+<span class="co">#&gt; 2-&gt;1,3-&gt;3   1.326508e+01              NA</span>
+<span class="co">#&gt; 1,1         1.621852e+01              NA</span>
+<span class="co">#&gt; 1,2         2.450925e+01              NA</span>
+<span class="co">#&gt; 1,3         1.814053e+01              NA</span>
+<span class="co">#&gt; 2,1         7.211636e+00              NA</span>
+<span class="co">#&gt; 2,2         4.844930e+00              NA</span>
+<span class="co">#&gt; 2,3         2.151103e+01              NA</span>
+<span class="co">#&gt; 3,1         1.321187e+01              NA</span>
+<span class="co">#&gt; 3,2         6.191092e+00              NA</span>
+<span class="co">#&gt; 3,3         5.168354e+00              NA</span></code></pre></div>
+<p>The notation for the transitions and joint probabilities requires some understanding. 1-&gt;2,i-&gt;j is <span class="math inline">\(\Pr(c_{2}=j|c_{1}=i)\)</span> and 2-&gt;1,i-&gt;j is <span class="math inline">\(\Pr(c_{1}=j|c_{2}=i)\)</span>. The final columns <span class="math inline">\(i,j\)</span> denote the joint probabilities <span class="math inline">\(\Pr(c_{1}=i \cap c_{2}=j)\)</span>.</p>
+</div>
+<div id="mcmc-samples-for-variables-selected-out-of-the-model." class="section level2">
+<h2>MCMC samples for variables selected out of the model.</h2>
+<p>The MCMC samples can be plotted to see how the variable selection works. In the example below, we see that all but about 5% of the draws for the cubic coefficient in Series 1 Group 3 are set ot zero, effectively selecting this parameter out of the model.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(model<span class="op">$</span>beta1[[<span class="dv">3</span>]][<span class="dv">1000</span><span class="op">:</span><span class="dv">5000</span>,<span class="dv">4</span>],<span class="dt">type=</span><span class="st">'l'</span>)</code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+</div>
+<div id="checking-for-label-switching-and-local-modes" class="section level2">
+<h2>Checking for Label Switching and Local Modes</h2>
+<p>One issue with GBTMs is the tendency for estimation routines to find a local mode which is not globally optimal. This is a problem for GBTMs estimated using maximum likelihood as well. To increase the probability that we are in a global optimum rather than a local optimum, we often run the Gibbs sampler using several seeds and print out the likelihood at the posterior mean:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(summary<span class="op">$</span>log.likelihood)
+<span class="co">#&gt; [1] -56140.15</span></code></pre></div>
+<p>We then use the seed which maximize the likelihood. This solution has no optimality guarantees, but we have found that we can often reach better optimas this way than other existing packages using maximum likelihood.</p>
+<p>The main drawback of the Bayesian approach is the tendency for label-switching and mode-switching. In the label-switching problem, the group labels switch in the middle of the algorithm. As a consequence, the group labeled “1” for the first 1000 draws may be labeled “2” in the second 1000 draws and vice versa. This would render and posterior summary of these coefficients meaningless. In our experience, label switching has not been a problem. However, switching between local-modes during the sampling process has occasionally been an issue.</p>
+<p>There is no consensus for the best way to deal with label and mode switching. Either problem can be easily observed by plotting the draws sequentially and checking for sudden and sustained breaks in the trend. For example, the plot below looks consistent throughout the post-burn-in samples:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(model<span class="op">$</span>beta1[[<span class="dv">1</span>]][<span class="dv">1000</span><span class="op">:</span><span class="dv">5000</span>,<span class="dv">1</span>],<span class="dt">type=</span><span class="st">'l'</span>)</code></pre></div>
+<p><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAASAAAAEgCAMAAAAjXV6yAAAAVFBMVEUAAAAAACsAAFUAK4AAVaorAAArACsrAFUrgNRVAABVACtVVVVVqqpVqv+AKwCAgFWA1P+qVQCq/6qq///UgCvU/9TU////qlX/1ID//6r//9T///+eoJjFAAAACXBIWXMAAA7DAAAOwwHHb6hkAAAKPklEQVR4nO2dC3ukJhSGSZNtk7bZZrrTTBL+//9sEOUilw/wiJc57/PsxjiI+AbhiIwKyWQRWxdg77AgAAsCsCAACwKwIAALArAgAAsCsCAACwKwIAALArAgAAsCsCAACwKwIAALArAgAAsCsCAACwKwIAALAmhBny/C5bdfG5dqR0yCXp11NxZkYUEAboMALAjAggBhL8YNkMdYg75+spc40yn29fNp03LsFtMG3cRrLt3dwo00gAUBWBCABQFYEIAFAVgQIBB0FeLhbYuS7BSuQQAWBGBBAHuxyoMdUUZBV/GsF27TAqPRgr5+Gi3Xx/fNCrNHgrsafEvDh2sQwLRBYxXiNmjG1ItNw/Zcf2ZwHARgQQAOFAEcKAK4mwdwoAjgGgTgQBHAgSKA4yAACwJwoAjgQBHA3TyAA0UA1yAAB4oADhQBHAcBWBBg6sVUy3PjQDHEETT0X/4XoxhH0KiGu3kfK+jjxyCIA0Uf4hokDkOtILXNk5ya63ZBSzbuSaUgOTh6eFscSJ9YUOf9bk1nQfWnNiFN+7ynGtRJ0NQ6Xxd18ycWRAML6pvdevusFkR0V+O0gqjuapxVENmY9FkFkd3VOKugY9Ygof/r1AbR3NUgFISzygoCm1f3YkR3NaL7bbO2M0FEpAUJlCqyVS6dYEH7ErRmoHgGQfSBopitXEmQ6CNoaTcfGQ9KCApkxX6fVgr35yxxRFAsWbLE+Y/nCckDRbE7QbNstg4UNxQ0/k8riDxQBIJmxYuVVlQKEgWCxKwcJUwJiQPFSkGRlnZvgoiYdi+sFTETJGQwth8b7ScUNIkZ0u5KkEgLEu4Gbv8nbBYtgoQVZNsmI0i0C6INFD1BwizKQJBeAoKEd1A2I71lKMhvvAWJIOJAsU6QKBHknUIiLUjEBImlgqi7+aggMR5XqSCREqS3iQoyWTlb60TLBFEHihWCREyQCARNNkwOBYKc1NO/PdUge1SOIGEKa84IK0jEBQlXkEgKGmvVOoKoA0VTIkeBOTJBL8jsLibI/lGW9GK0gWKJIJESJKQ5VFfQVPPsFqEgfz2poDJgMOA0LcWC7FFFBDkHaLbzBYlQkHAEeSsm6WsJwsHAXJDwBXlH4B+TmNRkBfmbyVmqQFCwg3UFFTTllYKCo5Z+AikKBUXw8+siKB0MOKWYCXLLmhcUWy/j6+caU7nRCSp7pn1tDcpQKAit7yao8Jn2OBhYS1A2eQ9Bhc+0h8HAngVNq9oEET3TvlRQxQGR0yiIhqWCetBFUGqq51kFkb0digXdrSAvCxYUHFEhdRerO2VFQZUXqzulRVDZKUZ4qbElbYJKGumCkev7FnTHNagQuovVLWkRVNrNpy5WZ3s/oyDSQHFrBXlYEKBFUCmFgeK2AhArCioNFLdWkGc9QcXd/NYK8rQIKhu0Lw4Utzv4EloElQ3a33ENKhy0Lw0Ut1aQp01Q2aA92V2NLWkURAMLulNBPCbNgixtgrwskgNmMMkeBc1L0yKoEBwtrSRoUYbzKTUtgkpPsVS0FOye+DAXCApnn60pCEZL+xKkp7jRCPLyWKORNrPpWo62cRM6QWSUCao+Xpl2FK63sxqNIG8e1REFycjS7GjjgmKyDyZI2p9RQbPJqFCQdJOpHUY2sXKsIFOogwqSs+T+NoWCps9SgmSzoLIBsxUEjcWXzhH7djxBUsxXJAXJhCDZWIPKZrnWCfL+1qsIkp6gsebodXKS4wuSrYIKZ7nWC7I1OyJIH0xE0GhCmqNza4QnSPYStMIs11DQdMw5Qa6J8WOdrzltgpPF6DGJrSB3Y7lIEA1298WCpCNIb2wS+YLklHReF7y6IpOCvKPdkaCxtNOPmCB7KpmtQ0H6x5hPsM7mbwTJgwmS0hNk1o0bhILMT7eYQJCXhljQ1NUTPSYwKkimBMlZ4ZOCZFaQXRMXFNtb8RFdHt+vT9Oj/1vxBdl1wn5uBSU3jYpx04ng9/UFqccl3x7fKR+wlBIUL+P+Bb3Kjz9+Df/a2UCQXucL8tfRCFL3lT//fFtZUDxtclM6QWDnaWxC9f2Uy3PuFCt4AxCVoESa9GogqCCHBE7Cy5PqyTKdWMEbgETkl5SgkjIVp+ghCFLw/paYoNrdEApK59fQSH+3P4rMiH3BG4BS+z2RoMxbEWprUEt5yhL3F3SxkUz64SYFbwCqEgHKVJUiJiiXX3sNyoPeALShoPSn3RrpXtm1ZJLbhkrQd+14fL8c9O1QHQTdHt6+m97C94uBbz33Z31B6lJD9U3He7dP044bGunv/lsJOt5rI5p23F6DLsd5bcSSHTe3QdfszY3vcOlp+EJLKtGZBek48CEXDQ01TEWK86Y8MmDWmR6CIMNXEW6DwtpLjdXZhaDhOkw34rUXq6vT7RTLNdF3XoP0vedrrhEybZDzvZ/G/VLTp5tXZLv5e+7FplHUgwaKtbTUID3/5UDvF1tCUxs03LPIBkLTt56TweRZBRVOwfv4/W28PZRKdFZBZYztuBoyuiTmo4nDsIYgZ8A+35SXZlqYbpNk8+RD734VmebF1qAn9EboEwoa4kPVQGenvwypVEP0+ZKd8nk+QcMB644+Gyiq+/IP0M8JBV289mvZuH1FGY4jaBjf0SHQshHFujIcR5AKbPQZtvC1EXVlOJAgdZLpfozAzykFkcKC7ggWBKi6WL1HuAYBWBCAePrL+Wic/nI/EE9/OR/E01/OB/H0l/NRN/3lDqma/nKPcBwEoBd0y1XD8dtoJk24UM41nUlDbinIr8XUuGTy9uzni55dNKUJF8pR8Ugik4bcktTdesboW0OJ+4o3rd+kCRfKGSJaNQpKklsa4skL422jeLT5/ScYoiyTJlyo3JsqNF1uUYinv+jb9+lMtKApTbhQuTd1o44utyh1E6gw+hRNnqhDqU2acKFuX8MdKqrcElRNwSugpyD1V3187yYIT+Isoe8ppiz0OsWIAA0kcSOtsurVSBMButgbWTevLdzUDc8+3bzaJcW1WD5Iu9EFiqo3MTO3+wWKy6/mrznLY8Ng0oQL5Vym2UwkuaUIuvmFgeLpoA4UTwfXIAB9G3QyyHuxs8EjigAWBLCCSB4TeD6cXoy7rxhBHMT4BHEQ42PbID2KwsxwBP3gRjpCcFeD8eFGGsCNNIAbaYBzivE86Rh8LQZgQQAWBGBBABYEYEEAFgRgQQAWBNifoGDWAdU0hDZYEIAFAXYp6PPl7xc9tUXNY/lHCbrqZ4qoaWN9v/O3U0HfTtR0UvUosJsYf/n48Wy+tNWPnQp6dqYfXsYVw8yc22//Fr2dgIydCnodxoDNhD3dDA2+hieBdmTXgq5G0DiY90r1Ns9ydi1oVoMUXz//6jvkuWtB44TnccXA9fG/vncXdi1o6LxML6Zb69fOsyj3LciPg9QjQIfJ0T2b6f0J2hksCMCCACwIwIIALAjAggAsCMCCACwIwIIALAjAggAsCMCCACwIwIIALAjAggAsCMCCACwIwIIALAjwP7Y9C2S2R7KqAAAAAElFTkSuQmCC" /><!-- --></p>
+<p>This indicates that neither label-switching nor mode-siwtching occured.</p>
+<p>If we do observe a sudden break, there are multiple possible solutions. From our experience, we usually find that re-estimating the model using a different seed will solve the problem with least amount of effort.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

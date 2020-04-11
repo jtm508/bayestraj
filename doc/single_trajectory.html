@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+
+
+<title>Bayesian GBTM</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css" data-origin="pandoc">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    for (var j = 0; j < rules.length; j++) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+<link href="data:text/css;charset=utf-8,body%20%7B%0Abackground%2Dcolor%3A%20%23fff%3B%0Amargin%3A%201em%20auto%3B%0Amax%2Dwidth%3A%20700px%3B%0Aoverflow%3A%20visible%3B%0Apadding%2Dleft%3A%202em%3B%0Apadding%2Dright%3A%202em%3B%0Afont%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0Afont%2Dsize%3A%2014px%3B%0Aline%2Dheight%3A%201%2E35%3B%0A%7D%0A%23TOC%20%7B%0Aclear%3A%20both%3B%0Amargin%3A%200%200%2010px%2010px%3B%0Apadding%3A%204px%3B%0Awidth%3A%20400px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Aborder%2Dradius%3A%205px%3B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Afont%2Dsize%3A%2013px%3B%0Aline%2Dheight%3A%201%2E3%3B%0A%7D%0A%23TOC%20%2Etoctitle%20%7B%0Afont%2Dweight%3A%20bold%3B%0Afont%2Dsize%3A%2015px%3B%0Amargin%2Dleft%3A%205px%3B%0A%7D%0A%23TOC%20ul%20%7B%0Apadding%2Dleft%3A%2040px%3B%0Amargin%2Dleft%3A%20%2D1%2E5em%3B%0Amargin%2Dtop%3A%205px%3B%0Amargin%2Dbottom%3A%205px%3B%0A%7D%0A%23TOC%20ul%20ul%20%7B%0Amargin%2Dleft%3A%20%2D2em%3B%0A%7D%0A%23TOC%20li%20%7B%0Aline%2Dheight%3A%2016px%3B%0A%7D%0Atable%20%7B%0Amargin%3A%201em%20auto%3B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dcolor%3A%20%23DDDDDD%3B%0Aborder%2Dstyle%3A%20outset%3B%0Aborder%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0Aborder%2Dwidth%3A%202px%3B%0Apadding%3A%205px%3B%0Aborder%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0Aborder%2Dwidth%3A%201px%3B%0Aborder%2Dstyle%3A%20inset%3B%0Aline%2Dheight%3A%2018px%3B%0Apadding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0Aborder%2Dleft%2Dstyle%3A%20none%3B%0Aborder%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Ap%20%7B%0Amargin%3A%200%2E5em%200%3B%0A%7D%0Ablockquote%20%7B%0Abackground%2Dcolor%3A%20%23f6f6f6%3B%0Apadding%3A%200%2E25em%200%2E75em%3B%0A%7D%0Ahr%20%7B%0Aborder%2Dstyle%3A%20solid%3B%0Aborder%3A%20none%3B%0Aborder%2Dtop%3A%201px%20solid%20%23777%3B%0Amargin%3A%2028px%200%3B%0A%7D%0Adl%20%7B%0Amargin%2Dleft%3A%200%3B%0A%7D%0Adl%20dd%20%7B%0Amargin%2Dbottom%3A%2013px%3B%0Amargin%2Dleft%3A%2013px%3B%0A%7D%0Adl%20dt%20%7B%0Afont%2Dweight%3A%20bold%3B%0A%7D%0Aul%20%7B%0Amargin%2Dtop%3A%200%3B%0A%7D%0Aul%20li%20%7B%0Alist%2Dstyle%3A%20circle%20outside%3B%0A%7D%0Aul%20ul%20%7B%0Amargin%2Dbottom%3A%200%3B%0A%7D%0Apre%2C%20code%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0Aborder%2Dradius%3A%203px%3B%0Acolor%3A%20%23333%3B%0Awhite%2Dspace%3A%20pre%2Dwrap%3B%20%0A%7D%0Apre%20%7B%0Aborder%2Dradius%3A%203px%3B%0Amargin%3A%205px%200px%2010px%200px%3B%0Apadding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0Abackground%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0Acode%20%7B%0Afont%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0Afont%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0Apadding%3A%202px%200px%3B%0A%7D%0Adiv%2Efigure%20%7B%0Atext%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0Abackground%2Dcolor%3A%20%23FFFFFF%3B%0Apadding%3A%202px%3B%0Aborder%3A%201px%20solid%20%23DDDDDD%3B%0Aborder%2Dradius%3A%203px%3B%0Aborder%3A%201px%20solid%20%23CCCCCC%3B%0Amargin%3A%200%205px%3B%0A%7D%0Ah1%20%7B%0Amargin%2Dtop%3A%200%3B%0Afont%2Dsize%3A%2035px%3B%0Aline%2Dheight%3A%2040px%3B%0A%7D%0Ah2%20%7B%0Aborder%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Apadding%2Dbottom%3A%202px%3B%0Afont%2Dsize%3A%20145%25%3B%0A%7D%0Ah3%20%7B%0Aborder%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0Apadding%2Dtop%3A%2010px%3B%0Afont%2Dsize%3A%20120%25%3B%0A%7D%0Ah4%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0Amargin%2Dleft%3A%208px%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Ah5%2C%20h6%20%7B%0Aborder%2Dbottom%3A%201px%20solid%20%23ccc%3B%0Afont%2Dsize%3A%20105%25%3B%0A%7D%0Aa%20%7B%0Acolor%3A%20%230033dd%3B%0Atext%2Ddecoration%3A%20none%3B%0A%7D%0Aa%3Ahover%20%7B%0Acolor%3A%20%236666ff%3B%20%7D%0Aa%3Avisited%20%7B%0Acolor%3A%20%23800080%3B%20%7D%0Aa%3Avisited%3Ahover%20%7B%0Acolor%3A%20%23BB00BB%3B%20%7D%0Aa%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0Aa%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0Atext%2Ddecoration%3A%20underline%3B%20%7D%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%0A" rel="stylesheet" type="text/css" />
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Bayesian GBTM</h1>
+
+
+
+<p>In this vignette we will demonstrate how to use BayesTraj to estimate a Bayesian GBTM with a normal likelihood. We will use simulated data in order to verify that the estimation routine can recover the true parameters, and to demonstrate how the data should be formatted before calling the estimation routines.</p>
+<p>Begin by loading the BayesTraj library:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(BayesTraj)</code></pre></div>
+<div id="simulating-data" class="section level2">
+<h2>Simulating Data</h2>
+<p>First, we will simulate data. This will not be necessary in your own projects, but it is useful both for testing the package and for using as a template for formatting your own datasets.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">N=<span class="dv">1000</span> <span class="co">#number of units</span>
+T=<span class="dv">9</span> <span class="co">#time periods</span>
+pi=<span class="kw">c</span>(<span class="fl">0.5</span>,<span class="fl">0.2</span>,<span class="fl">0.3</span>) <span class="co">#group membership probabilities</span>
+K =<span class="st"> </span><span class="kw">length</span>(pi) <span class="co">#number of groups</span>
+<span class="co">#coefficients</span>
+beta=<span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">110</span>,<span class="dv">5</span>,<span class="op">-</span><span class="fl">0.5</span>,
+              <span class="dv">111</span>,<span class="op">-</span><span class="dv">2</span>,<span class="fl">0.1</span>,
+              <span class="dv">118</span>,<span class="dv">3</span>,<span class="fl">0.1</span>),<span class="dt">nrow=</span><span class="dv">3</span>,<span class="dt">ncol=</span><span class="dv">3</span>,<span class="dt">byrow=</span><span class="ot">TRUE</span>)
+sigma=<span class="dv">2</span> <span class="co">#standard deviation of outcomes</span>
+
+<span class="kw">set.seed</span>(<span class="dv">1</span>)
+data =<span class="st"> </span><span class="kw">gen_data</span>(<span class="dt">N=</span>N,
+                <span class="dt">T=</span>T,
+                <span class="dt">pi=</span>pi,
+                <span class="dt">beta=</span>beta,
+                <span class="dt">sigma=</span>sigma,
+                <span class="dt">poly =</span> <span class="dv">2</span> <span class="co">#degree of polynomial</span>
+                )</code></pre></div>
+<p>In this example we have simulated data for 1000 units with 9 time periods each, for a total of 9000 observations. We have chosen the group-membership probabilities to be 50%, 20%, and 30%. From this, the <code>gen_data</code> function can infer that there should be three groups.</p>
+<p>Each row of the <code>beta</code> matrix defines the trajectory coefficients. For example, the expected value at time <span class="math inline">\(t\)</span> in Group 1 is <span class="math inline">\(110+5t-0.5t^2\)</span>. Sigma, defines the standard deviation of the outcomes.</p>
+<p>When calling the <code>gen_data</code> function, we also specify <code>poly=2</code> in order to tell model to use a second-degree polynomial for time. If there are more non-intercept columns of <code>beta</code> than <code>poly</code>, <code>gen_data</code> will generate random covariates corresponding to the remaining columns. In general, the last <code>poly</code> columns of the <code>beta</code> matrix correspond to the polynomial coefficients.</p>
+<p>Now let’s take a look at the generated data. We can unpack the individual attributes from the data object.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">X=data<span class="op">$</span>X
+y=data<span class="op">$</span>Y</code></pre></div>
+<p>The first 18 rows of <code>X</code> are:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">head</span>(X,<span class="dv">18</span>))
+<span class="co">#&gt;       [,1] [,2] [,3]</span>
+<span class="co">#&gt;  [1,]    1    1    1</span>
+<span class="co">#&gt;  [2,]    1    2    4</span>
+<span class="co">#&gt;  [3,]    1    3    9</span>
+<span class="co">#&gt;  [4,]    1    4   16</span>
+<span class="co">#&gt;  [5,]    1    5   25</span>
+<span class="co">#&gt;  [6,]    1    6   36</span>
+<span class="co">#&gt;  [7,]    1    7   49</span>
+<span class="co">#&gt;  [8,]    1    8   64</span>
+<span class="co">#&gt;  [9,]    1    9   81</span>
+<span class="co">#&gt; [10,]    2    1    1</span>
+<span class="co">#&gt; [11,]    2    2    4</span>
+<span class="co">#&gt; [12,]    2    3    9</span>
+<span class="co">#&gt; [13,]    2    4   16</span>
+<span class="co">#&gt; [14,]    2    5   25</span>
+<span class="co">#&gt; [15,]    2    6   36</span>
+<span class="co">#&gt; [16,]    2    7   49</span>
+<span class="co">#&gt; [17,]    2    8   64</span>
+<span class="co">#&gt; [18,]    2    9   81</span></code></pre></div>
+<p>The first column identifies the unit. For example, the first 9 rows correspond to unit 1, the second 9 rows correspond to unit 2, and so forth. The second column is the time variable. Rows 1 and 10 correspond to time 1, rows 2 and 11 correspond to time 2, and so forth. Similarly, the third column is the square of the time column.</p>
+<p>Now we take a look at <code>y</code>. These are the outcomes. <code>y[1]</code> corresponds to the outcome for unit 1 at time 1. <code>y[2]</code> corresponds to the outcome for unit 1 at time 2, and so forth. The values of <code>y</code> must correspond with the rows of <code>X</code>. Therefore <code>X</code> and <code>y</code> should have the same length.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(<span class="kw">head</span>(y,<span class="dv">18</span>))
+<span class="co">#&gt;  [1] 114.6093 117.5802 118.8266 122.0160 123.9023 124.2542 118.5587</span>
+<span class="co">#&gt;  [8] 117.6470 116.1397 112.9243 114.4242 119.1764 120.6321 122.5672</span>
+<span class="co">#&gt; [15] 121.4290 120.8274 117.4027 115.0291</span></code></pre></div>
+</div>
+<div id="estimating-the-model" class="section level2">
+<h2>Estimating the model</h2>
+<p>We now turn our attention toward estimating the model. We can do this by calling the <code>traj</code> function.</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">iter =<span class="st"> </span><span class="dv">5000</span>
+thin =<span class="st"> </span><span class="dv">1</span>
+z =<span class="st"> </span><span class="kw">matrix</span>(<span class="dv">1</span>,<span class="dt">nrow=</span>K,<span class="dt">ncol=</span><span class="kw">dim</span>(X)[<span class="dv">2</span>])
+model =<span class="st"> </span><span class="kw">traj</span>(<span class="dt">X=</span>X, <span class="co">#data matrix</span>
+             <span class="dt">y=</span>y, <span class="co">#outcomes</span>
+             <span class="dt">K=</span>K, <span class="co">#number of groups</span>
+             <span class="dt">z=</span>z, <span class="co">#functional form matrix</span>
+             <span class="dt">iterations=</span>iter, <span class="co">#number of iterations</span>
+             <span class="dt">thin=</span>thin, <span class="co">#thinning</span>
+             <span class="dt">dispIter=</span><span class="dv">1000</span>) <span class="co">#Print a message every 1000 iterations</span>
+<span class="co">#&gt; [1] 1000</span>
+<span class="co">#&gt; [1] 2000</span>
+<span class="co">#&gt; [1] 3000</span>
+<span class="co">#&gt; [1] 4000</span>
+<span class="co">#&gt; [1] 5000</span></code></pre></div>
+<p>Here we run the model for 5000 MCMC iterations. Setting the <code>thin</code> parameter to 1 tells us to keep every sample. We can set <code>thin=10</code>, for example, to only keep 1 out of every 10 samples. Thinning is not necessary unless your computer has memory limitations. We also set <code>dispIter=1000</code> to tell the program to send us a message every 1000 MCMC iterations. This will help us monitor the progress of the program.</p>
+<p>The only argument we have not touched on yet is <code>z</code>. <code>z</code> allows us to specify which columns of <code>X</code> should be included in the model for each group. If <code>X</code> has <span class="math inline">\(d\)</span> columns, then <code>z</code> should be a <span class="math inline">\(K \times d\)</span> matrix. In practice, this allows us to specify different polynomial degrees for different groups. <code>Z[i,j]</code> indicates whether to include the <span class="math inline">\(j\)</span>th column of <code>X</code> in group i’s model. The first column of <code>z</code> corresponds to the intercept and should always be set to 1. In this example, have set <code>z[i,j]=1</code> for each (i,j), indicating we’d like to use a second-degree polynomial for all three groups.</p>
+<p>Some researchers prefer to specify different polynomial in each group. For example, a researcher who wants 2nd-degree polynomials in groups 1 and 2, but a 1-degree polynomial in group 3, could specify z as follows:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">z_=<span class="kw">matrix</span>(<span class="kw">c</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,
+            <span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">1</span>,
+            <span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">0</span>),<span class="dt">nrow=</span><span class="dv">3</span>,<span class="dt">ncol=</span><span class="dv">3</span>,<span class="dt">byrow=</span><span class="ot">TRUE</span>)</code></pre></div>
+</div>
+<div id="analyzing-the-model" class="section level2">
+<h2>Analyzing the Model</h2>
+<p>The model object contains the MCMC samples for each of the model’s parameters. We can access the MCMC samples as follows, where each row represent an iteration of the MCMC:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(model<span class="op">$</span>beta[[<span class="dv">1</span>]]) <span class="co">#group 1's coefficients</span>
+<span class="co">#&gt;          [,1]     [,2]        [,3]</span>
+<span class="co">#&gt; [1,] 111.9196 3.505139 -0.24404161</span>
+<span class="co">#&gt; [2,] 112.6969 3.563656 -0.13229219</span>
+<span class="co">#&gt; [3,] 117.5973 3.179666  0.06592185</span>
+<span class="co">#&gt; [4,] 117.5597 3.207062  0.08240667</span>
+<span class="co">#&gt; [5,] 117.3452 3.303807  0.07058685</span>
+<span class="co">#&gt; [6,] 117.1609 3.487615  0.05161241</span>
+<span class="kw">head</span>(model<span class="op">$</span>beta[[<span class="dv">2</span>]]) <span class="co">#group 2's coefficients</span>
+<span class="co">#&gt;          [,1]     [,2]       [,3]</span>
+<span class="co">#&gt; [1,] 112.4905 3.159789 -0.2205663</span>
+<span class="co">#&gt; [2,] 112.4614 3.333562 -0.1736958</span>
+<span class="co">#&gt; [3,] 113.6614 3.934240 -0.2647064</span>
+<span class="co">#&gt; [4,] 106.0704 7.382808 -0.7362604</span>
+<span class="co">#&gt; [5,] 109.9524 5.320701 -0.5354991</span>
+<span class="co">#&gt; [6,] 110.2450 4.920892 -0.4977111</span>
+<span class="kw">head</span>(model<span class="op">$</span>beta[[<span class="dv">3</span>]]) <span class="co">#group 3's coefficients</span>
+<span class="co">#&gt;          [,1]      [,2]       [,3]</span>
+<span class="co">#&gt; [1,] 112.3980 3.0077717 -0.2117297</span>
+<span class="co">#&gt; [2,] 111.0502 3.0760145 -0.2438018</span>
+<span class="co">#&gt; [3,] 110.2607 2.8519129 -0.3182364</span>
+<span class="co">#&gt; [4,] 109.8328 3.3208052 -0.3651014</span>
+<span class="co">#&gt; [5,] 110.0424 2.8698523 -0.3181357</span>
+<span class="co">#&gt; [6,] 110.1171 0.4191075 -0.1046469</span>
+<span class="kw">head</span>(model<span class="op">$</span>sigma) <span class="co">#variance - NOT THE STANDARD DEVIATION</span>
+<span class="co">#&gt; [1] 151.84572 144.46687  49.30993  36.16892  34.89276  17.69164</span>
+model<span class="op">$</span>c[<span class="dv">1</span><span class="op">:</span><span class="dv">6</span>,<span class="dv">1</span><span class="op">:</span><span class="dv">10</span>] <span class="co">#unit-level group memberships</span>
+<span class="co">#&gt;      [,1] [,2] [,3] [,4] [,5] [,6] [,7] [,8] [,9] [,10]</span>
+<span class="co">#&gt; [1,]    3    3    3    3    2    3    3    3    1     3</span>
+<span class="co">#&gt; [2,]    1    3    2    3    3    3    3    3    3     3</span>
+<span class="co">#&gt; [3,]    3    1    1    3    3    3    3    1    1     3</span>
+<span class="co">#&gt; [4,]    3    3    1    3    3    3    3    1    1     3</span>
+<span class="co">#&gt; [5,]    3    3    1    3    2    3    3    1    1     3</span>
+<span class="co">#&gt; [6,]    2    3    1    3    2    3    3    1    1     2</span>
+<span class="kw">head</span>(model<span class="op">$</span>pi) <span class="co">#group-membership probabilities</span>
+<span class="co">#&gt;           [,1]       [,2]      [,3]</span>
+<span class="co">#&gt; [1,] 0.1025598 0.23972161 0.6577186</span>
+<span class="co">#&gt; [2,] 0.1373852 0.20734876 0.6552660</span>
+<span class="co">#&gt; [3,] 0.2847773 0.08506965 0.6301531</span>
+<span class="co">#&gt; [4,] 0.2654934 0.01765258 0.7168540</span>
+<span class="co">#&gt; [5,] 0.2799095 0.11079554 0.6092950</span>
+<span class="co">#&gt; [6,] 0.2583544 0.43391876 0.3077269</span></code></pre></div>
+<p>A conveniant way to summarize the posterior is with the <code>summary_single</code> function:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">burn =<span class="st"> </span><span class="fl">0.9</span>
+summary =<span class="st"> </span><span class="kw">summary_single</span>(model,X,y,z,burn)</code></pre></div>
+<p>The <code>burn</code> parameter specifies the fraction of draws to keep. In this example, we keep the last 90% of MCMC samples. The first 10% are discarded as the burn-in period.</p>
+<p>We can now print out a posterior summary to obtain the posterior mean, standard deviation, and 95% credible interval, as follows:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(summary<span class="op">$</span>estimates)
+<span class="co">#&gt;               Estimate Standard Deviation         2.5%          50%</span>
+<span class="co">#&gt; beta_1[1] 117.80613054        0.109519011 117.58752449 117.80419668</span>
+<span class="co">#&gt; beta_1[2]   3.08281049        0.050427305   2.98408181   3.08380902</span>
+<span class="co">#&gt; beta_1[3]   0.09257394        0.004940248   0.08291855   0.09249339</span>
+<span class="co">#&gt; beta_2[1] 110.08375701        0.080716409 109.92376758 110.08534727</span>
+<span class="co">#&gt; beta_2[2]   4.98817924        0.037011004   4.91606859   4.98783134</span>
+<span class="co">#&gt; beta_2[3]  -0.50092401        0.003597028  -0.50818874  -0.50092371</span>
+<span class="co">#&gt; beta_3[1] 110.85174235        0.130591050 110.59647034 110.85333483</span>
+<span class="co">#&gt; beta_3[2]  -1.98938255        0.059184151  -2.10489837  -1.98975345</span>
+<span class="co">#&gt; beta_3[3]   0.10208004        0.005771702   0.09069248   0.10209157</span>
+<span class="co">#&gt; sigma       1.43412214        0.010845754   1.41304332   1.43406691</span>
+<span class="co">#&gt; pi[1]      28.22730709        1.454500217  25.45228838  28.21183445</span>
+<span class="co">#&gt; pi[2]      51.92959012        1.594010463  48.74290919  51.93541618</span>
+<span class="co">#&gt; pi[3]      19.84310279        1.249415335  17.42586160  19.82166590</span>
+<span class="co">#&gt;                 97.5%</span>
+<span class="co">#&gt; beta_1[1] 118.0226768</span>
+<span class="co">#&gt; beta_1[2]   3.1824795</span>
+<span class="co">#&gt; beta_1[3]   0.1023227</span>
+<span class="co">#&gt; beta_2[1] 110.2411201</span>
+<span class="co">#&gt; beta_2[2]   5.0613396</span>
+<span class="co">#&gt; beta_2[3]  -0.4939601</span>
+<span class="co">#&gt; beta_3[1] 111.1085527</span>
+<span class="co">#&gt; beta_3[2]  -1.8739339</span>
+<span class="co">#&gt; beta_3[3]   0.1134287</span>
+<span class="co">#&gt; sigma       1.4555217</span>
+<span class="co">#&gt; pi[1]      31.1037223</span>
+<span class="co">#&gt; pi[2]      55.0190359</span>
+<span class="co">#&gt; pi[3]      22.3461472</span></code></pre></div>
+</div>
+<div id="checking-for-label-switching-and-local-modes" class="section level2">
+<h2>Checking for Label Switching and Local Modes</h2>
+<p>One issue with GBTMs is the tendency for estimation routines to find a local mode which is not globally optimal. This is a problem for GBTMs estimated using maximum likelihood as well. To increase the probability that we are in a global optimum rather than a local optimum, we often run the Gibbs sampler using several seeds and print out the likelihood at the posterior mean:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">print</span>(summary<span class="op">$</span>log.likelihood)
+<span class="co">#&gt; [1] -14866.08</span></code></pre></div>
+<p>We then use the seed which maximize the likelihood. This solution has no optimality guarantees, but we have found that we can often reach better optimas this way than other existing packages using maximum likelihood.</p>
+<p>The main drawback of the Bayesian approach is the tendency for label-switching and mode-switching. In the label-switching problem, the group labels switch in the middle of the algorithm. As a consequence, the group labeled “1” for the first 1000 draws may be labeled “2” in the second 1000 draws and vice versa. This would render and posterior summary of these coefficients meaningless. In our experience, label switching has not been a problem. However, switching between local-modes during the sampling process has occasionally been an issue.</p>
+<p>There is no consensus for the best way to deal with label and mode switching. Either problem can be easily observed by plotting the draws sequentially and checking for sudden and sustained breaks in the trend. For example, the plot below looks consistent throughout the post-burn-in samples:</p>
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">plot</span>(model<span class="op">$</span>beta[[<span class="dv">1</span>]][<span class="dv">1000</span><span class="op">:</span><span class="dv">5000</span>,<span class="dv">1</span>],<span class="dt">type=</span><span class="st">'l'</span>)</code></pre></div>
+<p><img src="data:image/png;base64,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" /><!-- --></p>
+<p>This indicates that neither label-switching nor mode-siwtching occured.</p>
+<p>If we do observe a sudden break, there are multiple possible solutions. From our experience, we usually find that re-estimating the model using a different seed will solve the problem with least amount of effort.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

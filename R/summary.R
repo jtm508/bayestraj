@@ -11,11 +11,14 @@
 #' @export
 
 summary_single = function(model,X,y,z,burn) {
+  #number of observations and covariates
   n = dim(model$c)[1]
   K = length(model$beta)
   
+  #initialize dataframe
   df = data.frame(A= numeric(0), B= numeric(0), C= numeric(0), D= numeric(0),E= numeric(0))
 
+  #Get posterior quanttities for beta
   beta.e = matrix(0,nrow=K,ncol=max(do.call(rbind,lapply(model$beta,dim))[,2]))
   for (k in 1:K) {
     A = cbind(colMeans(tail(model$beta[[k]],n*burn)),
@@ -26,6 +29,7 @@ summary_single = function(model,X,y,z,burn) {
     df = rbind(df,A)
   }
   
+  #Get posterior quantities for standard deviation (NOTE THIS IS NOT THE VARIANCE!!)
   A = as.data.frame(t(c(mean(tail(sqrt(model$sigma),n*burn)),
                         sd(tail(sqrt(model$sigma),n*burn)),
                         quantile(tail(sqrt(model$sigma),n*burn),probs=c(0.025,0.5,0.975)))))
@@ -33,6 +37,7 @@ summary_single = function(model,X,y,z,burn) {
   rownames(A) = "sigma"
   df = rbind(df,A)
   
+  #Get posterior quantities for group memberships
   A = cbind(colMeans(tail(100*model$pi,n*burn)),
             apply(tail(100*model$pi,n*burn),2,sd),
             t(apply(tail(100*model$pi,n*burn),2,quantile,probs=c(0.025,0.5,0.975))))
@@ -40,7 +45,10 @@ summary_single = function(model,X,y,z,burn) {
   rownames(A) = sprintf("pi[%d]",seq(1:K))
   df = rbind(df,A)
   
+  #relabel dataframe
   colnames(df)[1:2] = c("Estimate","Standard Deviation")
+  
+  #Get likelihood and BIC at posterior median
   id = X[,1]
   X[,1]=1
   ll = log_lik(X,y,pi,beta.e,sigma.e,id)
@@ -63,14 +71,17 @@ summary_single = function(model,X,y,z,burn) {
 #' @export
 
 summary_single_MS = function(model,X,y,burn) {
+  #number of observations and covariates
   n = dim(model$c)[1]
   K = length(model$beta)
   
+  #initialize dataframe
   df = data.frame(A= numeric(0), B= numeric(0), C= numeric(0), D= numeric(0),E= numeric(0),F= numeric(0))
   
   beta.e = matrix(0,nrow=K,ncol=dim(X)[2])
   sigma.e = rep(NA,K)
   for (k in 1:K) {
+    #Get posterior quanttities for beta
     A = cbind(colMeans(tail(model$beta[[k]],n*burn)),
               apply(tail(model$beta[[k]],n*burn), 2, sd),
               t(apply(tail(model$beta[[k]],n*burn),2,quantile,probs=c(0.025,0.5,0.975))),
@@ -79,6 +90,7 @@ summary_single_MS = function(model,X,y,burn) {
     rownames(A) = sprintf(paste("beta_",k,"[%d]",sep=''),seq(1:dim(model$beta[[k]])[2]))
     df = rbind(df,A)
     
+    #Get posterior quantities for standard deviation (NOTE THIS IS NOT THE VARIANCE!!)
     A = as.data.frame(t(c(mean(tail(sqrt(model$sigma[,k]),n*burn)),
                           sd(tail(sqrt(model$sigma[,k]),n*burn)),
                           quantile(tail(sqrt(model$sigma[,k]),n*burn),probs=c(0.025,0.5,0.975)),
@@ -88,6 +100,7 @@ summary_single_MS = function(model,X,y,burn) {
     df = rbind(df,A)
   }
   
+  #Get posterior quantities for group memberships
   A = cbind(colMeans(tail(100*model$pi,n*burn)),
             apply(tail(100*model$pi,n*burn),2,sd),
             t(apply(tail(100*model$pi,n*burn),2,quantile,probs=c(0.025,0.5,0.975))),
@@ -96,9 +109,12 @@ summary_single_MS = function(model,X,y,burn) {
   rownames(A) = sprintf("pi[%d]",seq(1:K))
   df = rbind(df,A)
   
+  
+  #relabel dataframe
   colnames(df)[1:2] = c("Estimate","Standard Deviation")
   colnames(df)[6] = "Inclusion Prob."
   
+  #Get likelihood and BIC at posterior median
   id = X[,1]
   X[,1]=1
   z = (beta.e != 0)*1
@@ -127,12 +143,16 @@ summary_single_MS = function(model,X,y,burn) {
 #' @export
  
 summary_dual = function(model,X1,X2,y1,y2,z1,z2,burn) {
+  #number of observations and covariates
   n1 = dim(model$c1)[1]
   K1 = length(model$beta1)
   K2 = length(model$beta2)
   
+  #initialize dataframe
   df = data.frame(A= numeric(0), B= numeric(0), C= numeric(0), D= numeric(0),E= numeric(0))
+  
   #group 1
+  #Get posterior quanttities for beta
   beta1.e = matrix(0,nrow=K1,ncol=max(do.call(rbind,lapply(model$beta1,dim))[,2]))
   for (k in 1:K1) {
     A = cbind(colMeans(tail(model$beta1[[k]],n1*burn)),
@@ -142,8 +162,8 @@ summary_dual = function(model,X1,X2,y1,y2,z1,z2,burn) {
     rownames(A) = sprintf(paste("beta1_",k,"[%d]",sep=''),seq(1:dim(model$beta1[[k]])[2]))
     df = rbind(df,A)
   }
-  #apply(tail(model$beta1[[1]],n1*burn),2,quantile,probs=c(0.025,0.5,0.975))
   
+  #Get posterior quantities for standard deviation (NOTE THIS IS NOT THE VARIANCE!!)
   A = as.data.frame(t(c(mean(tail(sqrt(model$sigma1),n1*burn)),
                         sd(tail(sqrt(model$sigma1),n1*burn)),
                         quantile(tail(sqrt(model$sigma1),n1*burn),probs=c(0.025,0.5,0.975)))))
@@ -151,6 +171,7 @@ summary_dual = function(model,X1,X2,y1,y2,z1,z2,burn) {
   rownames(A) = "sigma1"
   df = rbind(df,A)
   
+  #Get posterior quantities for group memberships
   A = cbind(colMeans(tail(100*model$pi1,n1*burn)),
             apply(tail(100*model$pi1,n1*burn),2,sd),
             t(apply(tail(100*model$pi1,n1*burn),2,quantile,probs=c(0.025,0.5,0.975))))
@@ -159,6 +180,7 @@ summary_dual = function(model,X1,X2,y1,y2,z1,z2,burn) {
   df = rbind(df,A)
   
   #group 2
+  #Get posterior quanttities for beta
   beta2.e = matrix(0,nrow=K2,ncol=max(do.call(rbind,lapply(model$beta2,dim))[,2]))
   for (k in 1:K2) {
     A = cbind(colMeans(tail(model$beta2[[k]],n1*burn)),
@@ -169,6 +191,7 @@ summary_dual = function(model,X1,X2,y1,y2,z1,z2,burn) {
     df = rbind(df,A)
   }
   
+  #Get posterior quantities for standard deviation (NOTE THIS IS NOT THE VARIANCE!!)
   A = as.data.frame(t(c(mean(tail(sqrt(model$sigma2),n1*burn)),
                         sd(tail(sqrt(model$sigma2),n1*burn)),
                         quantile(tail(sqrt(model$sigma2),n1*burn),probs=c(0.025,0.5,0.975)))))
@@ -176,6 +199,7 @@ summary_dual = function(model,X1,X2,y1,y2,z1,z2,burn) {
   rownames(A) = "sigma2"
   df = rbind(df,A)
   
+  #Get posterior quantities for group memberships
   A = cbind(colMeans(tail(100*model$pi2,n1*burn)),
             apply(tail(100*model$pi2,n1*burn),2,sd),
             t(apply(tail(100*model$pi2,n1*burn),2,quantile,probs=c(0.025,0.5,0.975))))
@@ -231,8 +255,10 @@ summary_dual = function(model,X1,X2,y1,y2,z1,z2,burn) {
   rownames(A) = rn
   df = rbind(df,A)
   
+  #relabel dataframe
   colnames(df)[1:2] = c("Estimate","Standard Deviation")
   
+  #Get likelihood and BIC at posterior median
   id1 = X1[,1]
   id2 = X2[,1]
   X1[,1]=1
@@ -367,15 +393,19 @@ summary_dual_constrained = function(model,X1,X2,y1,y2,z,burn) {
 #' @export
 
 summary_dual_MS = function(model,X1,X2,y1,y2,burn) {
+  #number of observations and covariates
   n1 = dim(model$c1)[1]
   K1 = length(model$beta1)
   K2 = length(model$beta2)
   
+  #initialize dataframe
   df = data.frame(A= numeric(0), B= numeric(0), C= numeric(0), D= numeric(0),E= numeric(0),F= numeric(0))
+  
   #group 1
   beta1.e = matrix(0,nrow=K1,ncol=dim(X1)[2])
   sigma1.e = rep(NA,K1)
   for (k in 1:K1) {
+    #Get posterior quanttities for beta
     A = cbind(colMeans(tail(model$beta1[[k]],n1*burn)),
               apply(tail(model$beta1[[k]],n1*burn), 2, sd),
               t(apply(tail(model$beta1[[k]],n1*burn),2,quantile,probs=c(0.025,0.5,0.975))),
@@ -384,6 +414,7 @@ summary_dual_MS = function(model,X1,X2,y1,y2,burn) {
     rownames(A) = sprintf(paste("beta1_",k,"[%d]",sep=''),seq(1:dim(model$beta1[[k]])[2]))
     df = rbind(df,A)
     
+    #Get posterior quantities for standard deviation (NOTE THIS IS NOT THE VARIANCE!!)
     A = as.data.frame(t(c(mean(tail(sqrt(model$sigma1[,k]),n1*burn)),
                           sd(tail(sqrt(model$sigma1[,k]),n1*burn)),
                           quantile(tail(sqrt(model$sigma1[,k]),n1*burn),probs=c(0.025,0.5,0.975)),
@@ -393,6 +424,7 @@ summary_dual_MS = function(model,X1,X2,y1,y2,burn) {
     df = rbind(df,A)
   }
   
+  #Get posterior quantities for group memberships
   A = cbind(colMeans(tail(100*model$pi1,n1*burn)),
             apply(tail(100*model$pi1,n1*burn),2,sd),
             t(apply(tail(100*model$pi1,n1*burn),2,quantile,probs=c(0.025,0.5,0.975))),
@@ -405,6 +437,7 @@ summary_dual_MS = function(model,X1,X2,y1,y2,burn) {
   beta2.e = matrix(0,nrow=K2,ncol=dim(X2)[2])
   sigma2.e = rep(NA,K2)
   for (k in 1:K2) {
+    #Get posterior quanttities for beta
     A = cbind(colMeans(tail(model$beta2[[k]],n1*burn)),
               apply(tail(model$beta2[[k]],n1*burn), 2, sd),
               t(apply(tail(model$beta2[[k]],n1*burn),2,quantile,probs=c(0.025,0.5,0.975))),
@@ -413,6 +446,7 @@ summary_dual_MS = function(model,X1,X2,y1,y2,burn) {
     rownames(A) = sprintf(paste("beta2_",k,"[%d]",sep=''),seq(1:dim(model$beta2[[k]])[2]))
     df = rbind(df,A)
     
+    #Get posterior quantities for standard deviation (NOTE THIS IS NOT THE VARIANCE!!)
     A = as.data.frame(t(c(mean(tail(sqrt(model$sigma2[,k]),n1*burn)),
                           sd(tail(sqrt(model$sigma2[,k]),n1*burn)),
                           quantile(tail(sqrt(model$sigma2[,k]),n1*burn),probs=c(0.025,0.5,0.975)),
@@ -422,6 +456,7 @@ summary_dual_MS = function(model,X1,X2,y1,y2,burn) {
     df = rbind(df,A)
   }
   
+  #Get posterior quantities for group memberships
   A = cbind(colMeans(tail(100*model$pi2,n1*burn)),
             apply(tail(100*model$pi2,n1*burn),2,sd),
             t(apply(tail(100*model$pi2,n1*burn),2,quantile,probs=c(0.025,0.5,0.975))),
@@ -481,9 +516,11 @@ summary_dual_MS = function(model,X1,X2,y1,y2,burn) {
   rownames(A) = rn
   df = rbind(df,A)
   
+  #relabel dataframe
   colnames(df)[1:2] = c("Estimate","Standard Deviation")
   colnames(df)[6] = "Inclusion Prob."
   
+  #Get likelihood and BIC at posterior median
   id1 = X1[,1]
   id2 = X2[,1]
   X1[,1]=1

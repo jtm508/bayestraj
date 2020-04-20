@@ -2,7 +2,7 @@
 title: "Bayesian Dual GBTM"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{my-vignette}
+  %\VignetteIndexEntry{Bayesian Dual GBTM}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -89,7 +89,7 @@ print(head(y1,18))
 ```
 
 ## Estimating the model
-We now turn our attention toward estimating the model. We can do this by calling the `dualtraj` function. 
+We now turn our attention toward estimating the model. We can do this by calling the `dualtraj` function. This function uses the following weakly-informative hyperparameters: a uniform prior on group membership probabilities, an Inverse-Gamma(0.0005,0.0005) priors on the variances, and a Normal(0,$\lambda$*I) priors on the regression coeffcients, with $\lambda=100$ as the default. A lambda parameter can be passed into the function if 100 is not sufficiently uninformative for the scale of your data.
 
 ```{r}
 iter = 5000
@@ -105,11 +105,11 @@ model = dualtraj(X1=X1, #data matrix Series 1
                  z1=z1, #functional form matrix Series 1
                  z2=z2, #functional form matrix Series 2
                  iterations=iter, #number of iterations
-                thin=thin, #thinning
+                 thin=thin, #thinning
                  dispIter=1000) #Print a message every 1000 iterations
 ```
 
-Here we run the model for 5000 MCMC iterations. Setting the `thin` parameter to 1 tells us to keep every sample. We can set `thin=10`, for example, to only keep 1 out of every 10 samples. Thinning is not necessary unless your computer has memory limitations. We also set `dispIter=1000` to tell the program to send us a message every 1000 MCMC iterations. This will help us monitor the progress of the program.
+Here we run the model for 5000 MCMC iterations. In practice, more iterations may be desirable to ensure the posterior results are valid. Setting the `thin` parameter to 1 tells us to keep every sample. We can set `thin=10`, for example, to only keep 1 out of every 10 samples. Thinning is not necessary unless your computer has memory limitations. We also set `dispIter=1000` to tell the program to send us a message every 1000 MCMC iterations. This will help us monitor the progress of the program.
 
 The only arguments we have not touched on yet is `z1` and `z2`. `z1` allows us to specify which columns of `X1` should be included in the model for each group. If `X1` has $d$ columns, then `z1` should be a $K1 \times d$ matrix.  In practice, this allows us to specify different polynomial degrees for different groups. `Z1[i,j]` indicates whether to include the $j$th column of `X1` in Series 1 Group i's model. The first column of `z1` corresponds to the intercept and should always be set to 1. In this example, have set `z1[i,j]=1` for each (i,j), indicating we'd like to use a second-degree polynomial for all three groups. The same applies to `z2`.
 

@@ -53,7 +53,7 @@ model = dualtrajMS(X1=X_father,
                  time_index=2,
                  iterations=iter,
                  thin=1,
-                 dispIter=1000)
+                 dispIter=100)
 
 burn = 0.8
 summary = summary_dual_MS(model,X_father,X_son,Y_father,Y_son,burn)
@@ -124,6 +124,43 @@ sampleTraj = function(beta,bounds,poly,log=FALSE,div=FALSE) {
   return(yTraj)
 }
 
+sampleTraj = function(beta,bounds,poly,log=FALSE,div=FALSE) {
+  #generate covariates for each time period
+  cov = rep(1,(bounds[2]-bounds[1]+1))
+  for (i in 1:poly) {
+    cov = cbind(cov,(0:30)^i)
+  }
+  if (log == TRUE) {
+    cov = cbind(cov,(log(cov[,2]+1)))
+  }
+  if (div == TRUE) {
+    cov = cbind(cov,(1/(cov[,2]+1)))
+  }
+  
+  #simulate y using cov*beta + n(0,sqrt(sigma))
+  yTraj= list()
+  for (i in 1:length(beta)) {
+    ppd = t(cov %*% t(tail(beta[[i]],n1*burn)))
+    df = exp(as.data.frame(t(apply(ppd,2,quantile,probs=c(0.025,0.5,0.975)))))
+    colnames(df) = c('lower','median','upper')
+    df$time = seq.int(nrow(df)) + 24
+    df$group = as.factor(i)
+    yTraj[[i]] = df
+  }
+  #append datasets
+  df_all = do.call(rbind,yTraj)
+  
+  #reorder groups by mean value
+  df_group = aggregate(df_all$median,list(df_all$group),mean)
+  df_group = df_group[order(df_group$x,decreasing=TRUE),]
+  df_group$order = seq.int(nrow(df_group))
+  df_group = df_group[order(df_group$Group.1),]
+  group_order = df_group$order
+  df_all$group = as.factor(group_order[df_all$group])
+  df_all = df_all[order(df_all$group),]
+  return(df_all)
+}
+
 #get trajectory samples
 yTraj1 = sampleTraj(model$beta1,bounds=c(0,30),poly=3,log=FALSE,div=FALSE)
 yTraj2 = sampleTraj(model$beta2,bounds=c(0,30),poly=3,log=FALSE,div=FALSE)
@@ -164,9 +201,49 @@ trajPlot = function(yTraj,bounds,title) {
   p
 }
 
+trajPlot = function(yTraj,title,names=NULL) {
+  col_list = c('dodgerblue4','darkgreen','darkorange3','goldenrod4','darkred','turquoise2','palegreen1')
+  pch_list = c(15,16,17,18,8,4,3)
+  p = ggplot(yTraj, aes(x=time, y=median, group=group)) +
+    geom_ribbon(aes(ymin = lower, ymax = upper, fill = group), fill='gray',alpha = 0.5) +
+    geom_line(color=col_list[yTraj$group]) +
+    geom_point(pch=pch_list[yTraj$group],color=col_list[yTraj$group],size=2) +
+    theme(legend.title = element_blank(),legend.position="bottom",panel.background = element_rect(fill = 'white', colour = 'white')) +
+    scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
+    expand_limits(y=0) +
+    labs(title = title) + 
+    xlab("Age") + 
+    ylab("Income (Thousands)")
+  p
+}
+trajPlot(yTraj1,'Father Trajectories')
+
+#function to plot the trajectories
+trajPlot = function(yTraj,title,names=NULL) {
+  group_num = yTraj$group
+  if (!is.null(names)) {
+    yTraj$group = names[yTraj$group]
+  }
+  col_list = c('dodgerblue4','darkgreen','darkorange3','goldenrod4','darkred','turquoise2','palegreen1')
+  pch_list = c(15,16,17,18,8,4,3)
+  p = ggplot(yTraj, aes(x=time, y=median, group=group)) +
+    geom_ribbon(aes(ymin = lower, ymax = upper, fill = group), fill='gray',alpha = 0.5) +
+    geom_line(aes(color=group)) +
+    #geom_point(aes(linetype = group),pch=pch_list[yTraj$group],color=col_list[yTraj$group],size=2) +
+    geom_point(aes(shape=group,color=group)) +
+    theme(legend.title = element_blank(),legend.position="bottom",panel.background = element_rect(fill = 'white', colour = 'white')) +
+    scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
+    expand_limits(y=0) +
+    labs(title = title) + 
+    xlab("Age") + 
+    ylab("Income (Thousands)")
+  p
+}
+trajPlot(yTraj1,'Father Trajectories',c('Test','sdfsd','sdfs','tada','sdf'))
+
 #combine plots
-multiplot(trajPlot(yTraj1,c(0,30),'Father Trajectories'),
-          trajPlot(yTraj2,c(0,30),'Son Trajectories'),
+multiplot(trajPlot(yTraj1,'Father Trajectories',c('Test','sdfsd','sdfs','tada','sdf')),
+          trajPlot(yTraj2,'Son Trajectories'),
           cols=2)
 
 #group membership plots
@@ -290,11 +367,13 @@ trans_plot = function(pi) {
 trans_plot(model$pi1_2)
 trans_plot(model$pi2_1)
 
+options(scipen=999)
+plot(model$beta2[[2]][0:1000,4],ylab='Coefficient',xlab='MCMC Iteration',main='Cubic Coefficients MCMC Plot')
+plot(model$beta2[[2]][0:1000,4],type='l',ylab='Coefficient',xlab='MCMC Iteration',main='Cubic Coefficients Trace Plot')
+
 par(mfrow = c(3,1))
 
 #trace plots to show convergence
-plot(model$beta2[[2]][0:1000,4],type='l',ylab='Coefficient',xlab='MCMC Iteration',main='Cubic Coefficients Traceplot')
-
 age = cbind(model$beta2[[1]][,2],model$beta1[[2]][,2],model$beta1[[3]][,2])
 
 matplot(c(1:iter), age, type='l', xlab='Iteration', ylab='Age Coefficient', col=1:3)

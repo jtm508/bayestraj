@@ -12,6 +12,7 @@
 #' @param iterations: Integer, number of MCMC iterations
 #' @param thin: Integer, store every 'thin' iteration
 #' @param dispIter: Integer, frequency of printing the iteration number
+#' @param lambda: Numeric, prior for beta coefficients are N(0,lambda*I) where I is identity matrix
 #'
 #' @importFrom MCMCpack rdirichlet riwish rinvgamma
 #' @importFrom mvtnorm rmvnorm

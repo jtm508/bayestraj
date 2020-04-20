@@ -4,29 +4,58 @@ library(BayesTraj)
 N=1000 #sample size
 T1=9 #time
 T2=9
-pi1=c(0.5,0.2,0.3) #group probabilities
-#transition matrix
-pi1_2=matrix(c(0.3,0.3,0.4,
-             0.49,0.50,0.01,
-             0.7,0.2,0.1),
-           nrow=3,ncol=3,byrow=TRUE)
-#joint probability calculations
-pi12 = matrix(nrow=dim(pi1_2)[1],ncol=dim(pi1_2)[2])
-for (i in 1:dim(pi1_2)[1]) {
-  for (j in 1:dim(pi1_2)[2]) {
-    pi12[i,j] = pi1[i] * pi1_2[i,j]
+
+sim_number = 2
+
+if (sim_number==1) {
+  pi1=c(0.5,0.2,0.3) #group probabilities
+  #transition matrix
+  pi1_2=matrix(c(0.3,0.3,0.4,
+               0.49,0.50,0.01,
+               0.7,0.2,0.1),
+             nrow=3,ncol=3,byrow=TRUE)
+  #joint probability calculations
+  pi12 = matrix(nrow=dim(pi1_2)[1],ncol=dim(pi1_2)[2])
+  for (i in 1:dim(pi1_2)[1]) {
+    for (j in 1:dim(pi1_2)[2]) {
+      pi12[i,j] = pi1[i] * pi1_2[i,j]
+    }
   }
+  #coefficients
+  beta1=matrix(c(110,5,-0.5,
+                 111,-2,0.1,
+                 118,3,0.1),nrow=3,ncol=3,byrow=TRUE)
+  beta2=matrix(c(110,6,-0.6,
+                 111,-3,0.1,
+                 112,2,0.7),nrow=3,ncol=3,byrow=TRUE)
+  #variances
+  sigma1=sqrt(2)
+  sigma2=2^2
+} else if (sim_number==2) {
+  pi1=c(0.2,0.2,0.6) #group probabilities
+  #transition matrix
+  pi1_2=matrix(c(0.3,0.3,0.4,
+                 0.1,0.7,0.2,
+                 0.5,0.2,0.3),
+               nrow=3,ncol=3,byrow=TRUE)
+  #joint probability calculations
+  pi12 = matrix(nrow=dim(pi1_2)[1],ncol=dim(pi1_2)[2])
+  for (i in 1:dim(pi1_2)[1]) {
+    for (j in 1:dim(pi1_2)[2]) {
+      pi12[i,j] = pi1[i] * pi1_2[i,j]
+    }
+  }
+  #coefficients
+  beta1=matrix(c(40,5,-0.5,
+                30,-2,0.3,
+                20,3,0.1),nrow=3,ncol=3,byrow=TRUE)
+  beta1=matrix(c(45,6,-0.6,
+                 27,-1,0.1,
+                 23,4,0.2),nrow=3,ncol=3,byrow=TRUE)
+  #standard deviations
+  sigma1=1^2
+  sigma2=1.5^2
 }
-#coefficients
-beta1=matrix(c(110,5,-0.5,
-               111,-2,0.1,
-               118,3,0.1),nrow=3,ncol=3,byrow=TRUE)
-beta2=matrix(c(110,6,-0.6,
-               111,-3,0.1,
-               112,2,0.7),nrow=3,ncol=3,byrow=TRUE)
-#standard deviations
-sigma1=2
-sigma2=4
 
 #generate data
 set.seed(3)
@@ -89,6 +118,8 @@ print(summary$estimates)
 print(summary$log.likelihood)
 print(summary$BIC)
 
+#plots below are coresspond to simulation 1. Label permutations could mess up plots for other simulations
+
 library(ggplot2)
 #function for creating multiple plots in single image
 multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
@@ -127,7 +158,7 @@ multiplot <- function(..., plotlist=NULL, file, cols=1, layout=NULL) {
   }
 }
 
-dev.off()
+#dev.off()
 
 #order of groups
 #1: 3, 1, 2

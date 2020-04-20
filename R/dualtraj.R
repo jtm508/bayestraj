@@ -14,13 +14,14 @@
 #' @param thin: Integer, store every 'thin' iteration
 #' @param dispIter: Integer, frequency of printing the iteration number
 #' @param ll: Boolean, Set to TRUE to display the maximum log-likelihood over all the draws.
+#' @param lambda: Numeric, prior for beta coefficients are N(0,lambda*I) where I is identity matrix
 #'
 #' @importFrom MCMCpack rdirichlet riwish rinvgamma
 #' @importFrom mvtnorm rmvnorm
 #'
 #' @export
 
-dualtraj = function(X1,X2,y1,y2,K1,K2,z1,z2,iterations,thin=1,dispIter=10,ll=FALSE) {
+dualtraj = function(X1,X2,y1,y2,K1,K2,z1,z2,iterations,thin=1,dispIter=10,ll=FALSE,lambda=100) {
 
 #extract ids from design matrices
 id1 = X1[,1]
@@ -51,25 +52,25 @@ alpha1 = rep(1,K1)
 alpha2 = rep(1,K2)
 nu0 = 0.001
 sigma0 = 1
+Sigma1 = list()
+for (j in 1:K1)
+  Sigma1[[j]] = lambda*diag(sum(z1[j,])) #Beta1 prior. Scale identity matrix by lambda coefficient to make non-informative
+Sigma2 = list()
+for (j in 1:K2)
+  Sigma2[[j]] = lambda*diag(sum(z2[j,]))
 
 #initialize parameters
-c1 = sample(c(1:K1),N,replace=TRUE)
+c1 = sample(c(1:K1),N,replace=TRUE) #randomly assign groups
 c2 = sample(c(1:K2),N,replace=TRUE)
-pi1 = as.vector(rdirichlet(1,alpha1))
+pi1 = as.vector(rdirichlet(1,alpha1)) #randomly assign group membership probabilities
 pi1_2 = matrix(nrow=K1,ncol=K2)
 for (j in 1:K1)
   pi1_2[j,] = rdirichlet(1,alpha2)
-sigma1 = 1
+sigma1 = 1 #arbitrarily set to 1
 sigma2 = 1
-Sigma1 = list()
-for (j in 1:K1)
-  Sigma1[[j]] = 100*diag(sum(z1[j,]))
-Sigma2 = list()
-for (j in 1:K2)
-  Sigma2[[j]] = 100*diag(sum(z2[j,]))
-beta1=matrix(0,nrow=K1,ncol=d1,byrow=TRUE)
+beta1=matrix(0,nrow=K1,ncol=d1,byrow=TRUE) #set to 0
 beta2=matrix(0,nrow=K2,ncol=d2,byrow=TRUE)
-mu1 = list()
+mu1 = list() #set to 0
 for (j in 1:K1)
   mu1[[j]] = rep(0,sum(z1[j,]))
 mu2 = list()
@@ -92,6 +93,7 @@ sigma2Store = rep(NA,iterations/thin)
 
 maxll = -Inf
 
+#MCMC
 for (q in 1:iterations) {
   if (q %% dispIter == 0) {
     print(q)
@@ -130,7 +132,7 @@ for (q in 1:iterations) {
     maxll = max(maxll,ll.c)
   }
   
-  
+  #store results
   if (q %% thin == 0) {
     store = q/thin
     pi1Store[store,] = pi1

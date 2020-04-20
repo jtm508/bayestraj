@@ -2,7 +2,7 @@
 title: "Bayesian GBTM"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{my-vignette}
+  %\VignetteIndexEntry{Bayesian GBTM}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -72,7 +72,7 @@ print(head(y,18))
 ```
 
 ## Estimating the model
-We now turn our attention toward estimating the model. We can do this by calling the `traj` function. 
+We now turn our attention toward estimating the model. We can do this by calling the `traj` function. This function uses the following weakly-informative hyperparameters: a uniform prior on group membership probabilities, an Inverse-Gamma(0.0005,0.0005) prior on the variance, and a Normal(0,$\lambda$*I) prior on the regression coeffcients, with $\lambda=100$ as the default. A lambda parameter can be passed into the function if 100 is not sufficiently uninformative for the scale of your data.
 
 ```{r}
 iter = 5000
@@ -87,7 +87,7 @@ model = traj(X=X, #data matrix
              dispIter=1000) #Print a message every 1000 iterations
 ```
 
-Here we run the model for 5000 MCMC iterations. Setting the `thin` parameter to 1 tells us to keep every sample. We can set `thin=10`, for example, to only keep 1 out of every 10 samples. Thinning is not necessary unless your computer has memory limitations. We also set `dispIter=1000` to tell the program to send us a message every 1000 MCMC iterations. This will help us monitor the progress of the program.
+Here we run the model for 5000 MCMC iterations. In practice, more iterations may be desirable to ensure the posterior results are valid. Setting the `thin` parameter to 1 tells us to keep every sample. We can set `thin=10`, for example, to only keep 1 out of every 10 samples. Thinning is not necessary unless your computer has memory limitations. We also set `dispIter=1000` to tell the program to send us a message every 1000 MCMC iterations. This will help us monitor the progress of the program.
 
 The only argument we have not touched on yet is `z`. `z` allows us to specify which columns of `X` should be included in the model for each group. If `X` has $d$ columns, then `z` should be a $K \times d$ matrix.  In practice, this allows us to specify different polynomial degrees for different groups. `Z[i,j]` indicates whether to include the $j$th column of `X` in group i's model. The first column of `z` corresponds to the intercept and should always be set to 1. In this example, have set `z[i,j]=1` for each (i,j), indicating we'd like to use a second-degree polynomial for all three groups.
 

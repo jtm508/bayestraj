@@ -1,8 +1,8 @@
 ---
-title: "Bayesian Dual GBTM"
-output: rmarkdown::html_vignette
+title: "Bayesian Dual GBTM Model Selection"
+output: pdf_document
 vignette: >
-  %\VignetteIndexEntry{my-vignette}
+  %\VignetteIndexEntry{Bayesian Dual GBTM selection}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -91,7 +91,7 @@ print(head(y1,18))
 ```
 
 ## Estimating the model
-We now turn our attention toward estimating the model. We can do this by calling the `dualtrajMS` function. 
+We now turn our attention toward estimating the model. We can do this by calling the `dualtrajMS` function. This function uses the following weakly-informative hyperparameters: a uniform prior on group membership probabilities, Jeffery's prior on the variances, and a unit-information g-prior on the regression coefficients.
 
 ```{r}
 iter = 5000
@@ -109,7 +109,7 @@ model = dualtrajMS(X1=X1, #data matrix Series 1
 ```
 First, let's clarify the model specification. `dualtrajMS` will sample the polynomial degree in the MCMC samples, rather than independently choose whether or not to include each covariate. For example, if 3 is sampled then we will estimate a cubic polynomial, if 2 is sampled then we will estimate a squared polynomial, and so forth. Users wishing to average over more complicated functions than polynomials, or to estimate models in which high order polynomials can be included even if a lower polynomial was selected out, will need make corresponding edits to the `dualtrajMS` function.
 
-Here we run the model for 5000 MCMC iterations. Setting the `thin` parameter to 1 tells us to keep every sample. We can set `thin=10`, for example, to only keep 1 out of every 10 samples. Thinning is not necessary unless your computer has memory limitations. We also set `dispIter=1000` to tell the program to send us a message every 1000 MCMC iterations. This will help us monitor the progress of the program.
+Here we run the model for 5000 MCMC iterations. In practice, more iterations may be desirable to ensure the posterior results are valid. Setting the `thin` parameter to 1 tells us to keep every sample. We can set `thin=10`, for example, to only keep 1 out of every 10 samples. Thinning is not necessary unless your computer has memory limitations. We also set `dispIter=1000` to tell the program to send us a message every 1000 MCMC iterations. This will help us monitor the progress of the program.
 
 The only argument we have not touched on yet is `time_index`. This parameter specified which column of `X` corresponds to the time variable. If the data does not contain any covariates, this should be the second column of `X`. If, for example, we were using a dataset with additional covariates in columns 2 and 3, time in column 4, and time-squared in column 5, we would set `time_index=4`.
 

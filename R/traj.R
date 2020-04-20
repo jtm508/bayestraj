@@ -7,17 +7,18 @@
 #' @param K: Integer, number of latent classes 
 #' @param z: Matrix, K x dim(X)[2] indicator matrix indicating which variables to include in each group.
 #' @param iterations: Integer, number of MCMC iterations
-#' @param W: Matrix, design matrix for group membership
+#' @param W: Matrix, design matrix for group membership. Use this if you want to directly model the group membership probabilities using covariates
 #' @param thin: Integer, store every 'thin' iteration
 #' @param dispIter: Integer, frequency of printing the iteration number
 #' @param ll: Boolean, Set to TRUE to display the maximum log-likelihood over all the draws.
+#' @param lambda: Numeric, prior for beta coefficients are N(0,lambda*I) where I is identity matrix
 #'
 #' @importFrom MCMCpack rdirichlet riwish rinvgamma
 #' @importFrom mvtnorm rmvnorm
 #'
 #' @export
 
-traj = function(X,y,K,z,iterations,W=matrix(),thin=1,dispIter=10,ll=FALSE) {
+traj = function(X,y,K,z,iterations,W=matrix(),thin=1,dispIter=10,ll=FALSE,lambda=100) {
 
 #extract ids from design matrices
 id = X[,1]
@@ -45,19 +46,20 @@ P = dim(W)[2]
 alpha = rep(1,K)
 nu0 = 0.001
 sigma0 = 1
-
-#initialize parameters
-c = sample(c(1:K),N,replace=TRUE)
-pi = as.vector(rdirichlet(1,alpha))
-sigma = 1
 Sigma = list()
 for (j in 1:K)
-  Sigma[[j]] = 100*diag(sum(z[j,]))
-beta=matrix(0,nrow=K,ncol=d,byrow=TRUE)
-mu = list()
+  Sigma[[j]] = lambda*diag(sum(z[j,])) #Beta prior. Scale identity matrix by lambda coefficient to make non-informative
+
+#initialize parameters
+c = sample(c(1:K),N,replace=TRUE) #randomly assign groups
+pi = as.vector(rdirichlet(1,alpha)) #randomly draw group membership probabilities
+sigma = 1 #arbitrarily set to 1
+beta=matrix(0,nrow=K,ncol=d,byrow=TRUE) #initialize to 0
+mu = list() #set to 0
 for (j in 1:K)
   mu[[j]] = rep(0,sum(z[j,]))
-zeta=matrix(0,nrow=P,ncol=K,byrow=TRUE)
+#If modeling group membership probabilities, zeta are the logit coefficients
+zeta=matrix(0,nrow=P,ncol=K,byrow=TRUE) #set to 0
 
 #initialize storage
 cStore = matrix(nrow=iterations/thin, ncol=N)
@@ -72,6 +74,7 @@ sigmaStore = rep(NA,iterations/thin)
 
 maxll = -Inf
 
+#MCMC
 for (q in 1:iterations) {
   if (q %% dispIter == 0) {
     print(q)
@@ -115,6 +118,7 @@ for (q in 1:iterations) {
     maxll = max(maxll,ll.c)
   }
   
+  #store results
   if (q %% thin == 0) {
     store = q/thin
     if (P == 1)

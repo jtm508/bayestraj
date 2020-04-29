@@ -1,10 +1,10 @@
 library(BayesTraj)
 set.seed(3)
 
-sim_number = 1
+sim_number = 2
 
 N=1000 #number of units
-T=9 #time periods
+T=15 #time periods
 if (sim_number==1) {
   pi=c(0.5,0.2,0.3) #group membership probabilities
   #coefficients
@@ -14,17 +14,17 @@ if (sim_number==1) {
   sigma=2^2 #variance of outcomes
   poly = 2 #degree of polynomial
 } else if (sim_number==2) {
-  pi=c(0.3,0.4,0.3) #group membership probabilities
+  pi=c(0.4,0.2,0.3,0.1) #group membership probabilities
   #coefficeints
-  beta=matrix(c(5,1,-0.1,0.003,
+  beta=matrix(c(5,1,-0.1,0.01,
                 4,0.3,0.1,0,
-                5,-1,0,0),nrow=3,ncol=4,byrow=TRUE)
+                7,-0.3,0,0,
+                6,0,0,0),nrow=4,ncol=4,byrow=TRUE)
   #variance
   sigma=1^2
   poly = 3 #degree of polynomial
 } 
 
-set.seed(1)
 data = gen_data(N=N,
                 T=T,
                 pi=pi,
@@ -39,9 +39,8 @@ g=data$g
 K = length(pi)
 
 #Estimate model with model selection
-iter = 10000
+iter = 25000
 thin = 1
-z = matrix(1,nrow=K,ncol=dim(X)[2])
 model = trajMS(X=X, #data matrix
                y=y, #outcomes
                K=K, #number of groups
@@ -51,6 +50,6 @@ model = trajMS(X=X, #data matrix
                dispIter=100) #Print a message every 1000 iterations
 
 #print results
-burn = 0.9
+burn = 0.8
 summary = summary_single_MS(model,X,y,burn)
 print(summary$estimates)

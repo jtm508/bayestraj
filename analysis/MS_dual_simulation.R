@@ -1,7 +1,7 @@
 library(BayesTraj)
 set.seed(2)
 
-sim_number = 2
+sim_number = 1
 
 N=1000 #number of units
 T1=8 #series 1 time periods
@@ -14,6 +14,20 @@ if (sim_number==1) {
                  0.2,0.5,0.3,
                  0.7,0.2,0.1),
                nrow=3,ncol=3,byrow=TRUE)
+  #joint probability calculations
+  pi12 = matrix(nrow=dim(pi1_2)[1],ncol=dim(pi1_2)[2])
+  for (i in 1:dim(pi1_2)[1]) {
+    for (j in 1:dim(pi1_2)[2]) {
+      pi12[i,j] = pi1[i] * pi1_2[i,j]
+    }
+  }
+  pi2 = colSums(pi12)
+  pi2_1 = matrix(nrow=length(pi2),ncol=length(pi1))
+  for (i in 1:length(pi2)) {
+    for (j in 1:length(pi1)) {
+      pi2_1[i,j] = pi12[j,i] / pi2[i]
+    }
+  }
   #series 1 coefficients
   beta1=matrix(c(100,10,-0.5,0.1,
                  80,-1,0.5,0,

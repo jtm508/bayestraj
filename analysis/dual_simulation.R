@@ -5,7 +5,7 @@ N=1000 #sample size
 T1=9 #time
 T2=9
 
-sim_number = 2
+sim_number = 1
 
 if (sim_number==1) {
   pi1=c(0.5,0.2,0.3) #group probabilities
@@ -19,6 +19,13 @@ if (sim_number==1) {
   for (i in 1:dim(pi1_2)[1]) {
     for (j in 1:dim(pi1_2)[2]) {
       pi12[i,j] = pi1[i] * pi1_2[i,j]
+    }
+  }
+  pi2 = colSums(pi12)
+  pi2_1 = matrix(nrow=length(pi2),ncol=length(pi1))
+  for (i in 1:length(pi2)) {
+    for (j in 1:length(pi1)) {
+      pi2_1[i,j] = pi12[j,i] / pi2[i]
     }
   }
   #coefficients

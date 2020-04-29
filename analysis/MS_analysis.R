@@ -63,6 +63,14 @@ print(summary$BIC)
 },error=function(e){cat("ERROR :",conditionMessage(e), "\n")})
 #}
 
+#1,4,5,3,2
+#4,2,3,5,1
+
+c('Sustained Increase', 'Mid-Life Peak', 'Upper-Middle', 'Lower-Middle', 'Low Earners')
+c('Ultra-Rich', 'Upper', 'Upper-Middle', 'Lower-Middle', 'Low Earners')
+'Sustained Increase','Low Earners','Lower-Middle','Mid-Life Peak','Upper Middle'
+'Low Earners','Upper','Upper Middle','Ultra-Rich','Lower Middle'
+
 n1 = dim(model$c1)[1]
 
 #function for putting multiple plots in one image
@@ -119,27 +127,6 @@ sampleTraj = function(beta,bounds,poly,log=FALSE,div=FALSE) {
   #simulate y using cov*beta + n(0,sqrt(sigma))
   yTraj= list()
   for (i in 1:length(beta)) {
-    yTraj[[i]] = t(cov %*% t(tail(beta[[i]],n1*burn)))
-  }
-  return(yTraj)
-}
-
-sampleTraj = function(beta,bounds,poly,log=FALSE,div=FALSE) {
-  #generate covariates for each time period
-  cov = rep(1,(bounds[2]-bounds[1]+1))
-  for (i in 1:poly) {
-    cov = cbind(cov,(0:30)^i)
-  }
-  if (log == TRUE) {
-    cov = cbind(cov,(log(cov[,2]+1)))
-  }
-  if (div == TRUE) {
-    cov = cbind(cov,(1/(cov[,2]+1)))
-  }
-  
-  #simulate y using cov*beta + n(0,sqrt(sigma))
-  yTraj= list()
-  for (i in 1:length(beta)) {
     ppd = t(cov %*% t(tail(beta[[i]],n1*burn)))
     df = exp(as.data.frame(t(apply(ppd,2,quantile,probs=c(0.025,0.5,0.975)))))
     colnames(df) = c('lower','median','upper')
@@ -166,85 +153,29 @@ yTraj1 = sampleTraj(model$beta1,bounds=c(0,30),poly=3,log=FALSE,div=FALSE)
 yTraj2 = sampleTraj(model$beta2,bounds=c(0,30),poly=3,log=FALSE,div=FALSE)
 
 #function to plot the trajectories
-trajPlot = function(yTraj,bounds,title) {
-  order = order(unlist(lapply(yTraj,mean)))
-  print(length(order))
-  obj.list = list()
-  cols = c()
-  for (j in 1:length(order)){
-    obj.list[[j]] = as.data.frame(t(apply(yTraj[[order[j]]],2,quantile,probs=c(0.025,0.5,0.975))))
-    cols = c(cols,c(paste("A",j,sep=""),paste("B",j,sep=""),paste("C",j,sep="")))
-  }
-  predictiveIntervals = exp(do.call(cbind, obj.list))  / 1000
-  colnames(predictiveIntervals) = cols
-  predictiveIntervals$index = seq(bounds[1],bounds[2]) + 25
-  
-  p = ggplot(data = predictiveIntervals)
-  p = p+ theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-                                                 panel.background = element_blank())
-  p = p + scale_y_continuous(labels = function(x) format(x, scientific = FALSE))
-  p = p + expand_limits(y=0)
+trajPlot = function(yTraj,title,names=NULL,pos='right') {
+  yTraj$group <- as.factor(yTraj$group)
   col_list = c('dodgerblue4','darkgreen','darkorange3','goldenrod4','darkred','turquoise2','palegreen1')
   pch_list = c(15,16,17,18,8,4,3)
-  for (j in 1:length(order)){
-    p = p +
-      geom_ribbon(aes_string(x = 'index', ymin=paste("A",j,sep=""), ymax=paste("C",j,sep="")), 
-                  fill='gray',alpha = 0.5) +
-      geom_line(aes_string(x = 'index', y = paste("B",j,sep="")), color = col_list[j]) + 
-      geom_point(aes_string(x = 'index', y = paste("B",j,sep="")), 
-                 pch = pch_list[j],size=2,fill='blue',color=col_list[j])
-  }
-  p = p +
-    labs(title = title) + 
-    xlab("Age") + 
-    ylab("Income (Thousands)")
-  p
-}
-
-trajPlot = function(yTraj,title,names=NULL) {
-  col_list = c('dodgerblue4','darkgreen','darkorange3','goldenrod4','darkred','turquoise2','palegreen1')
-  pch_list = c(15,16,17,18,8,4,3)
-  p = ggplot(yTraj, aes(x=time, y=median, group=group)) +
+  p = ggplot(yTraj, aes(x=time, y=median,group=group)) +
     geom_ribbon(aes(ymin = lower, ymax = upper, fill = group), fill='gray',alpha = 0.5) +
-    geom_line(color=col_list[yTraj$group]) +
-    geom_point(pch=pch_list[yTraj$group],color=col_list[yTraj$group],size=2) +
-    theme(legend.title = element_blank(),legend.position="bottom",panel.background = element_rect(fill = 'white', colour = 'white')) +
+    geom_line(aes(color=group)) +scale_color_manual(values=col_list,name = "Group assignment", labels=names)+
+    geom_point(aes(shape=group ,color=group),size=2.5)  + scale_shape_manual(values=pch_list,name = "Group assignment", labels=names)+
+    theme(legend.title = element_blank(),legend.position=pos,panel.background = element_rect(fill = 'white', colour = 'white'), legend.text=element_text(size=12)) +
     scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
     expand_limits(y=0) +
     labs(title = title) + 
     xlab("Age") + 
-    ylab("Income (Thousands)")
+    ylab("Income (Thousands)") +
+    guides(color=guide_legend(nrow=2,byrow=TRUE))
   p
 }
-trajPlot(yTraj1,'Father Trajectories')
 
-#function to plot the trajectories
-trajPlot = function(yTraj,title,names=NULL) {
-  group_num = yTraj$group
-  if (!is.null(names)) {
-    yTraj$group = names[yTraj$group]
-  }
-  col_list = c('dodgerblue4','darkgreen','darkorange3','goldenrod4','darkred','turquoise2','palegreen1')
-  pch_list = c(15,16,17,18,8,4,3)
-  p = ggplot(yTraj, aes(x=time, y=median, group=group)) +
-    geom_ribbon(aes(ymin = lower, ymax = upper, fill = group), fill='gray',alpha = 0.5) +
-    geom_line(aes(color=group)) +
-    #geom_point(aes(linetype = group),pch=pch_list[yTraj$group],color=col_list[yTraj$group],size=2) +
-    geom_point(aes(shape=group,color=group)) +
-    theme(legend.title = element_blank(),legend.position="bottom",panel.background = element_rect(fill = 'white', colour = 'white')) +
-    scale_y_continuous(labels = function(x) format(x, scientific = FALSE)) +
-    expand_limits(y=0) +
-    labs(title = title) + 
-    xlab("Age") + 
-    ylab("Income (Thousands)")
-  p
-}
-trajPlot(yTraj1,'Father Trajectories',c('Test','sdfsd','sdfs','tada','sdf'))
-
-#combine plots
-multiplot(trajPlot(yTraj1,'Father Trajectories',c('Test','sdfsd','sdfs','tada','sdf')),
-          trajPlot(yTraj2,'Son Trajectories'),
+png(file="mygraphic.png",width=800,height=500)
+multiplot(trajPlot(yTraj1,'Father Trajectories',c('Sustained Increase', 'Mid-Life Peak', 'Upper-Middle', 'Lower-Middle', 'Low Earners'),'bottom'),
+          trajPlot(yTraj2,'Son Trajectories',c('Ultra-Rich', 'Upper', 'Upper-Middle', 'Lower-Middle', 'Low Earners'),'bottom'),
           cols=2)
+dev.off()
 
 #group membership plots
 multiDensity = function(x) {
